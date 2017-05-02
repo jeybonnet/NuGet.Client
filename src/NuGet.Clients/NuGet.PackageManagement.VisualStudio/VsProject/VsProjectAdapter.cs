@@ -31,7 +31,7 @@ namespace NuGet.PackageManagement.VisualStudio
         private readonly VsHierarchyItem _vsHierarchyItem;
         private EnvDTE.Project _dteProject;
         private readonly Func<IVsHierarchy, EnvDTE.Project> _loadDteProject;
-        private readonly IVsProjectAdapterProvider _vsProjectAdapterProvider;
+        private readonly IProjectSystemCache _projectSystemCache;
         private readonly IDeferredProjectWorkspaceService _deferredProjectWorkspaceService;
         private readonly AsyncLazy<IMSBuildProjectDataService> _buildProjectDataService;
 
@@ -216,14 +216,14 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public VsProjectAdapter(
             EnvDTE.Project dteProject,
-            IVsProjectAdapterProvider vsProjectAdapterProvider)
+            IProjectSystemCache projectSystemCache)
         {
             Assumes.Present(dteProject);
-            Assumes.Present(vsProjectAdapterProvider);
+            Assumes.Present(projectSystemCache);
 
             _vsHierarchyItem = VsHierarchyItem.FromDteProject(dteProject);
             _dteProject = dteProject;
-            _vsProjectAdapterProvider = vsProjectAdapterProvider;
+            _projectSystemCache = projectSystemCache;
 
             FullProjectPath = EnvDTEProjectInfoUtility.GetFullProjectPath(_dteProject);
             ProjectNames = ProjectNames.FromDTEProject(_dteProject);
@@ -233,18 +233,18 @@ namespace NuGet.PackageManagement.VisualStudio
             IVsHierarchy project,
             ProjectNames projectNames,
             Func<IVsHierarchy, EnvDTE.Project> loadDteProject,
-            IVsProjectAdapterProvider vsProjectAdapterProvider,
+            IProjectSystemCache projectSystemCache,
             IDeferredProjectWorkspaceService deferredProjectWorkspaceService)
         {
             Assumes.Present(project);
             Assumes.Present(projectNames);
             Assumes.Present(loadDteProject);
-            Assumes.Present(vsProjectAdapterProvider);
+            Assumes.Present(projectSystemCache);
             Assumes.Present(deferredProjectWorkspaceService);
 
             _vsHierarchyItem = VsHierarchyItem.FromVsHierarchy(project);
             _loadDteProject = loadDteProject;
-            _vsProjectAdapterProvider = vsProjectAdapterProvider;
+            _projectSystemCache = projectSystemCache;
             _deferredProjectWorkspaceService = deferredProjectWorkspaceService;
 
             FullProjectPath = VsHierarchyUtility.GetProjectPath(project);
@@ -373,7 +373,42 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public IList<IVsProjectAdapter> GetReferencedProjects()
         {
-            return EnvDTEProjectUtility.GetReferencedProjects(Project).Select(project => _vsProjectAdapterProvider.CreateVsProject(project)).ToList();
+            if (!IsLoadDeferred)
+            {
+                var referencedProjects = new List<IVsProjectAdapter>();
+                var dteProjects = EnvDTEProjectUtility.GetReferencedProjects(Project);
+                foreach(var dteProject in dteProjects)
+                {
+                    var result = _projectSystemCache.TryGetVsProjectAdapter(dteProject.UniqueName, out IVsProjectAdapter projectAdapter);
+                    
+                    if (result)
+                    {
+                        referencedProjects.Add(projectAdapter);
+                    }
+                }
+
+                return referencedProjects;
+            }
+            else
+            {
+                return NuGetUIThreadHelper.JoinableTaskFactory.Run(async delegate
+                {
+                    var projectsPath = await _deferredProjectWorkspaceService.GetProjectReferencesAsync(FullProjectPath);
+                    var referencedProjects = new List<IVsProjectAdapter>();
+
+                    foreach (var projectPath in projectsPath)
+                    {
+                        var result = _projectSystemCache.TryGetVsProjectAdapter(projectPath, out IVsProjectAdapter projectAdapter);
+
+                        if (result)
+                        {
+                            referencedProjects.Add(projectAdapter);
+                        }
+                    }
+
+                    return referencedProjects;
+                });
+            }
         }
 
         public IEnumerable<RuntimeDescription> GetRuntimes()
@@ -478,7 +513,20 @@ namespace NuGet.PackageManagement.VisualStudio
             }
         }
 
-        public bool SupportsReference => EnvDTEProjectUtility.SupportsReferences(Project);
+        public bool SupportsReference
+        {
+            get
+            {
+                if (!IsLoadDeferred)
+                {
+                    return EnvDTEProjectUtility.SupportsReferences(Project);
+                }
+                else
+                {
+                    return !ProjectTypeGuids.Any(p => ProjectTypesConstant.UnsupportedProjectTypesForAddingReferences.Contains(p));
+                }
+            }
+        }
 
         #endregion Capablities
 

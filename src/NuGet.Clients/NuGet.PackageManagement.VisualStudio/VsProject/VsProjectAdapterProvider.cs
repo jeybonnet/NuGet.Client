@@ -19,6 +19,7 @@ namespace NuGet.PackageManagement.VisualStudio
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IDeferredProjectWorkspaceService _deferredProjectWorkspaceService;
+        private readonly IProjectSystemCache _projectSystemCache;
 
         private readonly Lazy<IVsSolution> _vsSolution;
 
@@ -26,13 +27,15 @@ namespace NuGet.PackageManagement.VisualStudio
         public VsProjectAdapterProvider(
             [Import(typeof(SVsServiceProvider))]
             IServiceProvider serviceProvider,
-            IDeferredProjectWorkspaceService deferredProjectWorkspaceService)
+            IDeferredProjectWorkspaceService deferredProjectWorkspaceService,
+            IProjectSystemCache projectSystemCache)
         {
             Assumes.Present(serviceProvider);
             Assumes.Present(deferredProjectWorkspaceService);
 
             _serviceProvider = serviceProvider;
             _deferredProjectWorkspaceService = deferredProjectWorkspaceService;
+            _projectSystemCache = projectSystemCache;
             _vsSolution = new Lazy<IVsSolution>(() => _serviceProvider.GetService<SVsSolution, IVsSolution>());
         }
 
@@ -40,7 +43,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             Assumes.Present(dteProject);
 
-            return new VsProjectAdapter(dteProject, this);
+            return new VsProjectAdapter(dteProject, _projectSystemCache);
         }
 
         public async Task<IVsProjectAdapter> CreateVsProjectAsync(IVsHierarchy project)
@@ -60,7 +63,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 shortName: Path.GetFileNameWithoutExtension(projectPath),
                 customUniqueName: uniqueName);
 
-            return new VsProjectAdapter(project, projectNames, EnsureProjectIsLoaded, this, _deferredProjectWorkspaceService);
+            return new VsProjectAdapter(project, projectNames, EnsureProjectIsLoaded, _projectSystemCache, _deferredProjectWorkspaceService);
         }
 
         public EnvDTE.Project EnsureProjectIsLoaded(IVsHierarchy project)

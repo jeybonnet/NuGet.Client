@@ -31,51 +31,6 @@ namespace NuGet.PackageManagement.VisualStudio
     {
         #region Constants and Statics
 
-        private static readonly HashSet<string> SupportedProjectTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            {
-                VsProjectTypes.WebSiteProjectTypeGuid,
-                VsProjectTypes.CsharpProjectTypeGuid,
-                VsProjectTypes.VbProjectTypeGuid,
-                VsProjectTypes.CppProjectTypeGuid,
-                VsProjectTypes.JsProjectTypeGuid,
-                VsProjectTypes.FsharpProjectTypeGuid,
-                VsProjectTypes.NemerleProjectTypeGuid,
-                VsProjectTypes.WixProjectTypeGuid,
-                VsProjectTypes.SynergexProjectTypeGuid,
-                VsProjectTypes.NomadForVisualStudioProjectTypeGuid,
-                VsProjectTypes.TDSProjectTypeGuid,
-                VsProjectTypes.DxJsProjectTypeGuid,
-                VsProjectTypes.DeploymentProjectTypeGuid,
-                VsProjectTypes.CosmosProjectTypeGuid,
-                VsProjectTypes.ManagementPackProjectTypeGuid,
-            };
-
-        private static readonly HashSet<string> UnsupportedProjectTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            {
-                VsProjectTypes.LightSwitchProjectTypeGuid,
-                VsProjectTypes.InstallShieldLimitedEditionTypeGuid,
-            };
-
-        // List of project types that cannot have binding redirects added
-        private static readonly string[] UnsupportedProjectTypesForBindingRedirects =
-            {
-                VsProjectTypes.WixProjectTypeGuid,
-                VsProjectTypes.JsProjectTypeGuid,
-                VsProjectTypes.NemerleProjectTypeGuid,
-                VsProjectTypes.CppProjectTypeGuid,
-                VsProjectTypes.SynergexProjectTypeGuid,
-                VsProjectTypes.NomadForVisualStudioProjectTypeGuid,
-                VsProjectTypes.DxJsProjectTypeGuid,
-                VsProjectTypes.CosmosProjectTypeGuid,
-            };
-
-        // List of project types that cannot have references added to them
-        private static readonly string[] UnsupportedProjectTypesForAddingReferences =
-            {
-                VsProjectTypes.WixProjectTypeGuid,
-                VsProjectTypes.CppProjectTypeGuid,
-            };
-
         private static readonly HashSet<string> UnsupportedProjectCapabilities = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
                 "SharedAssetsProject", // This is true for shared projects in universal apps
@@ -456,7 +411,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 return true;
             }
 
-            return envDTEProject.Kind != null && SupportedProjectTypes.Contains(envDTEProject.Kind) && !HasUnsupportedProjectCapability(envDTEProject);
+            return envDTEProject.Kind != null && ProjectTypesConstant.SupportedProjectTypes.Contains(envDTEProject.Kind) && !HasUnsupportedProjectCapability(envDTEProject);
         }
 
         private static bool IsProjectCapabilityCompliant(EnvDTE.Project envDTEProject)
@@ -709,7 +664,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            return envDTEProject.Kind == null || UnsupportedProjectTypes.Contains(envDTEProject.Kind);
+            return envDTEProject.Kind == null || ProjectTypesConstant.UnsupportedProjectTypes.Contains(envDTEProject.Kind);
         }
 
         public static bool IsParentProjectExplicitlyUnsupported(EnvDTE.Project envDTEProject)
@@ -780,7 +735,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            return (envDTEProject.Kind != null & !UnsupportedProjectTypesForBindingRedirects.Contains(envDTEProject.Kind, StringComparer.OrdinalIgnoreCase)) &&
+            return (envDTEProject.Kind != null & !ProjectTypesConstant.UnsupportedProjectTypesForBindingRedirects.Contains(envDTEProject.Kind, StringComparer.OrdinalIgnoreCase)) &&
                    !EnvDTEProjectInfoUtility.IsWindowsStoreApp(envDTEProject);
         }
 
@@ -789,7 +744,7 @@ namespace NuGet.PackageManagement.VisualStudio
             ThreadHelper.ThrowIfNotOnUIThread();
 
             return envDTEProject.Kind != null &&
-                   !UnsupportedProjectTypesForAddingReferences.Contains(envDTEProject.Kind, StringComparer.OrdinalIgnoreCase);
+                   !ProjectTypesConstant.UnsupportedProjectTypesForAddingReferences.Contains(envDTEProject.Kind, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>

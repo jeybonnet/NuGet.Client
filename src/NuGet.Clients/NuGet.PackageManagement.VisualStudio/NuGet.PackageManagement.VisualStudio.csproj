@@ -106,6 +106,7 @@
     <Compile Include="Common\PackageCollectionExtensions.cs" />
     <Compile Include="Common\PackageCollectionItem.cs" />
     <Compile Include="Common\PackageCollectionItemExtensions.cs" />
+    <Compile Include="Common\ProjectTypesConstant.cs" />
     <Compile Include="Common\VersionCollectionExtensions.cs" />
     <Compile Include="DefaultVSCredentialServiceProvider.cs" />
     <Compile Include="Handlers\ProjectRetargetingHandler.cs" />
