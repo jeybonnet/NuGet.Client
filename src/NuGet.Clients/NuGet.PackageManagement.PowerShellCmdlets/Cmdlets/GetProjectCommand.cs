@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Management.Automation;
 using EnvDTE;
 using NuGet.PackageManagement.VisualStudio;
@@ -51,7 +52,10 @@ namespace NuGet.PackageManagement.PowerShellCmdlets
 
             if (All.IsPresent)
             {
-                var projects = VsSolutionManager.GetAllVsProjectAdapters();
+                VsSolutionManager.EnsureSolutionIsLoaded();
+
+                var projects = VsSolutionManager.GetAllVsProjectAdapters().Select(p => p.Project);
+
                 WriteObject(projects, enumerateCollection: true);
             }
             else
@@ -62,7 +66,7 @@ namespace NuGet.PackageManagement.PowerShellCmdlets
                     IVsProjectAdapter defaultProject = GetDefaultProject();
                     if (defaultProject != null)
                     {
-                        WriteObject(defaultProject);
+                        WriteObject(defaultProject.Project);
                     }
                 }
                 else

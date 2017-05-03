@@ -311,13 +311,16 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public IEnumerable<IVsProjectAdapter> GetAllVsProjectAdapters()
         {
-            Debug.Assert(ThreadHelper.CheckAccess());
+            return NuGetUIThreadHelper.JoinableTaskFactory.Run(async delegate
+            {
+                await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            EnsureInitialize();
+                EnsureInitialize();
 
-            var vsProjectsAdapters = _projectSystemCache.GetVsProjectAdapters();
+                var vsProjectsAdapters = _projectSystemCache.GetVsProjectAdapters();
 
-            return vsProjectsAdapters;
+                return vsProjectsAdapters;
+            });
         }
 
         /// <summary>
