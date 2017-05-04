@@ -16,29 +16,29 @@ namespace NuGet.ProjectManagement
         string ProjectUniqueName { get; }
         string ProjectFullPath { get; }
         string ProjectFileFullPath { get; }
-        INuGetProjectContext NuGetProjectContext { get; }
-        void SetNuGetProjectContext(INuGetProjectContext nuGetProjectContext);
+
+        INuGetProjectContext NuGetProjectContext { get; set; }
+
         void AddFile(string path, Stream stream);
         void AddExistingFile(string path);
         void RemoveFile(string path);
         bool FileExistsInProject(string path);
 
-        dynamic VSProject4 { get; }
-
         /// <summary>
         /// Method called when adding an assembly reference to the project.
         /// </summary>
         /// <param name="referencePath">Physical path to the assembly file relative to the project root.</param>
-        void AddReference(string referencePath);
+        Task AddReferenceAsync(string referencePath);
 
-        void RemoveReference(string name);
-        bool ReferenceExists(string name);
+        Task RemoveReferenceAsync(string name);
+
+        Task<bool> ReferenceExistsAsync(string name);
 
         /// <summary>
         /// Adds an assembly reference to a framework assembly (one in the GAC).
         /// </summary>
         /// <param name="name">name of the assembly</param>
-        void AddFrameworkReference(string name, string packageId);
+        Task AddFrameworkReferenceAsync(string name, string packageId);
 
         void AddImport(string targetFullPath, ImportLocation location);
         void RemoveImport(string targetFullPath);

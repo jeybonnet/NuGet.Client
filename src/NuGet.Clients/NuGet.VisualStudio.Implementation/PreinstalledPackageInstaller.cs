@@ -371,19 +371,19 @@ namespace NuGet.VisualStudio
         /// <param name="packageInfos">The packages that were installed.</param>
         private void CopyNativeBinariesToBin(Project project, string repositoryPath, IEnumerable<PreinstalledPackageInfo> packageInfos)
         {
-            VSAPIProjectContext context = new VSAPIProjectContext();
-            VSMSBuildNuGetProjectSystem projectSystem = new VSMSBuildNuGetProjectSystem(_vsProjectAdapterProvider.CreateVsProject(project), context);
+            var context = new VSAPIProjectContext();
+            var projectSystem = new VsMSBuildProjectSystem(_vsProjectAdapterProvider.CreateVsProject(project), context);
 
             foreach (var packageInfo in packageInfos)
             {
-                string packagePath = String.Format(CultureInfo.InvariantCulture, "{0}.{1}", packageInfo.Id, packageInfo.Version);
+                var packagePath = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", packageInfo.Id, packageInfo.Version);
 
                 CopyNativeBinaries(projectSystem, repositoryPath,
                     Path.Combine(repositoryPath, packagePath));
             }
         }
 
-        private void CopyNativeBinaries(VSMSBuildNuGetProjectSystem projectSystem, string repositoryPath, string packagePath)
+        private void CopyNativeBinaries(VsMSBuildProjectSystem projectSystem, string repositoryPath, string packagePath)
         {
             const string nativeBinariesFolder = "NativeBinaries";
             const string binFolder = "bin";

@@ -2238,7 +2238,7 @@ namespace NuGet.PackageManagement
                 }
 
                 // Save project
-                SolutionManager?.SaveProject(nuGetProject);
+                await nuGetProject.SaveAsync(token);
 
                 // Clear direct install
                 SetDirectInstall(null, nuGetProjectContext);

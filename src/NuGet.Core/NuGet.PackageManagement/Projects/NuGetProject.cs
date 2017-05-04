@@ -13,27 +13,20 @@ namespace NuGet.ProjectManagement
 {
     public abstract class NuGetProject
     {
-        protected NuGetProject()
-            : this(new Dictionary<string, object>())
-        {
-        }
+        protected NuGetProject() : this(optionalMetadata: null) { }
 
-        protected NuGetProject(Dictionary<string, object> metadata)
+        protected NuGetProject(Dictionary<string, object> optionalMetadata)
         {
-            if (metadata == null)
-            {
-                throw new ArgumentNullException(nameof(metadata));
-            }
-
-            InternalMetadata = metadata;
+            InternalMetadata = optionalMetadata ?? new Dictionary<string, object>();
         }
 
         protected Dictionary<string, object> InternalMetadata { get; }
 
-        public IReadOnlyDictionary<string, object> Metadata
-        {
-            get { return InternalMetadata; }
-        }
+        public IReadOnlyDictionary<string, object> Metadata => InternalMetadata;
+
+        public INuGetProjectServices ProjectServices { get; protected set; } = DefaultProjectServices.Instance;
+
+        public ProjectModel.ProjectStyle ProjectStyle { get; protected set; } = ProjectModel.ProjectStyle.Unknown;
 
         /// <summary>
         /// This installs a package into the NuGetProject using the <see cref="Stream"/> passed in
@@ -78,7 +71,7 @@ namespace NuGet.ProjectManagement
         {
             if (key == null)
             {
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
             }
 
             var value = Metadata[key];
@@ -107,6 +100,11 @@ namespace NuGet.ProjectManagement
             return false;
         }
 
+        public Task SaveAsync(CancellationToken token)
+        {
+            return ProjectServices.ProjectSystem.SaveAsync(token);
+        }
+
         /// <summary>
         /// This static helper method returns the unique name on the project if present
         /// Otherwise, returns the name. If name is not present, it will throw
@@ -117,7 +115,7 @@ namespace NuGet.ProjectManagement
         {
             if (nuGetProject == null)
             {
-                throw new ArgumentNullException("nuGetProject");
+                throw new ArgumentNullException(nameof(nuGetProject));
             }
 
             string nuGetProjectName;
@@ -129,22 +127,5 @@ namespace NuGet.ProjectManagement
 
             return nuGetProjectName;
         }
-    }
-
-    public static class NuGetProjectMetadataKeys
-    {
-        // The name of the project, e.g. "ConsoleApplication1"
-        public const string Name = "Name";
-
-        // The name of the project, relative to the solution. e.g. "src\ConsoleApplication1"
-        public const string UniqueName = "UniqueName";
-
-        public const string TargetFramework = "TargetFramework";
-        public const string FullPath = "FullPath";
-
-        // used by Project K projects
-        public const string SupportedFrameworks = "SupportedFrameworks";
-
-        public const string ProjectId = "ProjectId";
     }
 }

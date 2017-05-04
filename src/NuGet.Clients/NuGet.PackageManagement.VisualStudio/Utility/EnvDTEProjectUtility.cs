@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft;
@@ -23,7 +22,7 @@ using NuGet.VisualStudio;
 using VSLangProj;
 using VSLangProj80;
 using VsWebSite;
-using MicrosoftBuildEvaluationProject = Microsoft.Build.Evaluation.Project;
+using MSBuildEvaluationProject = Microsoft.Build.Evaluation.Project;
 
 namespace NuGet.PackageManagement.VisualStudio
 {
@@ -372,17 +371,13 @@ namespace NuGet.PackageManagement.VisualStudio
 
         private static string GetPattern(string token)
         {
-            // Need NOT be on the UI thread
-
             return token == "*" ? @"(.*)" : @"(" + token + ")";
         }
 
-        internal static MicrosoftBuildEvaluationProject AsMicrosoftBuildEvaluationProject(string dteProjectFullName)
+        internal static MSBuildEvaluationProject AsMSBuildEvaluationProject(string projectFullName)
         {
-            // Should be called from the UI thread
-
-            return ProjectCollection.GlobalProjectCollection.GetLoadedProjects(dteProjectFullName).FirstOrDefault() ??
-                   ProjectCollection.GlobalProjectCollection.LoadProject(dteProjectFullName);
+            return ProjectCollection.GlobalProjectCollection.GetLoadedProjects(projectFullName).FirstOrDefault() ??
+                   ProjectCollection.GlobalProjectCollection.LoadProject(projectFullName);
         }
 
         internal static References GetReferences(EnvDTE.Project project)
@@ -787,31 +782,6 @@ namespace NuGet.PackageManagement.VisualStudio
 
         #region Act on Project
 
-        public static IVsProjectBuildSystem GetVsProjectBuildSystem(EnvDTE.Project project)
-        {
-            if (project == null)
-            {
-                throw new ArgumentNullException(nameof(project));
-            }
-
-            return NuGetUIThreadHelper.JoinableTaskFactory.Run(async () =>
-            {
-                await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                // Get the vs solution
-                IVsSolution solution = ServiceLocator.GetInstance<IVsSolution>();
-                IVsHierarchy hierarchy;
-                var hr = solution.GetProjectOfUniqueName(EnvDTEProjectInfoUtility.GetUniqueName(project), out hierarchy);
-
-                if (hr != VSConstants.S_OK)
-                {
-                    Marshal.ThrowExceptionForHR(hr);
-                }
-
-                return hierarchy as IVsProjectBuildSystem;
-            });
-        }
-
         internal static void EnsureCheckedOutIfExists(EnvDTE.Project envDTEProject, string root, string path)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
@@ -828,7 +798,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            EnvDTE.ProjectItem projectItem = await GetProjectItemAsync(envDTEProject, path);
+            var projectItem = await GetProjectItemAsync(envDTEProject, path);
             if (projectItem == null)
             {
                 return false;
@@ -836,40 +806,6 @@ namespace NuGet.PackageManagement.VisualStudio
 
             projectItem.Delete();
             return true;
-        }
-
-        internal static void AddImportStatement(EnvDTE.Project project, string targetsPath, ImportLocation location)
-        {
-            // Need NOT be on the UI Thread
-            MicrosoftBuildEvaluationProjectUtility.AddImportStatement(AsMSBuildProject(project), targetsPath, location);
-        }
-
-        internal static void RemoveImportStatement(EnvDTE.Project project, string targetsPath)
-        {
-            // Need NOT be on the UI Thread
-            MicrosoftBuildEvaluationProjectUtility.RemoveImportStatement(AsMSBuildProject(project), targetsPath);
-        }
-
-        private static MicrosoftBuildEvaluationProject AsMSBuildProject(EnvDTE.Project project)
-        {
-            // Need NOT be on the UI Thread
-            return ProjectCollection.GlobalProjectCollection.GetLoadedProjects(project.FullName).FirstOrDefault() ??
-                   ProjectCollection.GlobalProjectCollection.LoadProject(project.FullName);
-        }
-
-        internal static void Save(EnvDTE.Project project)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-            try
-            {
-                FileSystemUtility.MakeWritable(project.FullName);
-                project.Save();
-            }
-            catch (Exception ex)
-            {
-                ExceptionHelper.WriteErrorToActivityLog(ex);
-            }
         }
 
         #endregion

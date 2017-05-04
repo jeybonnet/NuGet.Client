@@ -1,12 +1,8 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft;
 using NuGet.ProjectManagement;
-using NuGet.ProjectModel;
 using NuGet.VisualStudio;
 
 namespace NuGet.PackageManagement.VisualStudio
@@ -16,32 +12,26 @@ namespace NuGet.PackageManagement.VisualStudio
     /// Since the base class <see cref="MSBuildNuGetProject"/> is in the NuGet.Core solution, it does not have
     /// references to DTE.
     /// </summary>
-    public class VSMSBuildNuGetProject : MSBuildNuGetProject
+    internal class VsMSBuildNuGetProject : MSBuildNuGetProject
     {
-        private readonly IVsProjectAdapter _vsProjectAdapter;
-
-        public VSMSBuildNuGetProject(
-            IVsProjectAdapter project,
+        public VsMSBuildNuGetProject(
+            IVsProjectAdapter projectAdapter,
             IMSBuildNuGetProjectSystem msbuildNuGetProjectSystem,
             string folderNuGetProjectPath,
-            string packagesConfigFolderPath) : base(
+            string packagesConfigFolderPath,
+            INuGetProjectServices projectServices)
+            : base(
                 msbuildNuGetProjectSystem,
                 folderNuGetProjectPath,
                 packagesConfigFolderPath)
         {
-            _vsProjectAdapter = project;
+            Assumes.Present(projectAdapter);
+            Assumes.Present(msbuildNuGetProjectSystem);
+            Assumes.Present(projectServices);
 
-            // set project id
-            var projectId = project.ProjectId;
-            InternalMetadata.Add(NuGetProjectMetadataKeys.ProjectId, projectId);
-        }
+            InternalMetadata.Add(NuGetProjectMetadataKeys.ProjectId, projectAdapter.ProjectId);
 
-        public override Task<IReadOnlyList<ProjectRestoreReference>> GetDirectProjectReferencesAsync(DependencyGraphCacheContext context)
-        {
-            Assumes.Present(context);
-
-            var resolvedProjects = context.DeferredPackageSpecs.Select(project => project.Name);
-            return VSProjectRestoreReferenceUtility.GetDirectProjectReferencesAsync(_vsProjectAdapter.Project, resolvedProjects, context.Logger);
+            ProjectServices = projectServices;
         }
     }
 }

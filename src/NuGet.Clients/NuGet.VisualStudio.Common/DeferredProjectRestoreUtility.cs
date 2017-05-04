@@ -178,7 +178,7 @@ namespace NuGet.VisualStudio
 
             var msbuildProjectDataService = await deferredWorkspaceService.GetMSBuildProjectDataServiceAsync(projectPath);
 
-            var packageReferences = (await SolutionWorkspaceUtility.GetProjectItemsAsync(msbuildProjectDataService, PackageReference)).ToList();
+            var packageReferences = (await msbuildProjectDataService.GetProjectItems(PackageReference)).ToList();
             if (packageReferences.Count == 0)
             {
                 return null;
@@ -216,7 +216,7 @@ namespace NuGet.VisualStudio
                         projectPath,
                         targetFramework.GetShortFolderName());
 
-                    packageReferences = (await SolutionWorkspaceUtility.GetProjectItemsAsync(msbuildProjectDataService, PackageReference)).ToList();
+                    packageReferences = (await msbuildProjectDataService.GetProjectItems(PackageReference)).ToList();
                 }
 
                 // Package target fallback per target framework
@@ -239,7 +239,7 @@ namespace NuGet.VisualStudio
                     packageReferences.Select(ToPackageLibraryDependency));
 
                 // Project references per target framework
-                var projectReferences = (await SolutionWorkspaceUtility.GetProjectItemsAsync(msbuildProjectDataService, ProjectReference))
+                var projectReferences = (await msbuildProjectDataService.GetProjectItems(ProjectReference))
                     .Select(item => ToProjectRestoreReference(item, projectDirectory));
                 projectsByFramework.Add(tfi.FrameworkName, projectReferences);
 

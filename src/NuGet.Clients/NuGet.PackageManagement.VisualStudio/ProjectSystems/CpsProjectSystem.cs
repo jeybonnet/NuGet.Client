@@ -7,18 +7,17 @@ using System.Threading.Tasks;
 using NuGet.Common;
 using NuGet.ProjectManagement;
 using NuGet.VisualStudio;
-using EnvDTEProject = EnvDTE.Project;
 
 namespace NuGet.PackageManagement.VisualStudio
 {
-    public abstract class CpsProjectSystem : VSMSBuildNuGetProjectSystem
+    public abstract class CpsProjectSystem : VsMSBuildProjectSystem
     {
         protected CpsProjectSystem(IVsProjectAdapter vsProjectAdapter, INuGetProjectContext nuGetProjectContext)
             : base(vsProjectAdapter, nuGetProjectContext)
         {
         }
 
-        protected override void AddGacReference(string name)
+        public override void AddGacReference(string name)
         {
             // Native & JS projects don't know about GAC
         }

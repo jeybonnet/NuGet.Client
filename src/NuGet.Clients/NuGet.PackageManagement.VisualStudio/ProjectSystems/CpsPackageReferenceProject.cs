@@ -17,7 +17,6 @@ using NuGet.ProjectManagement.Projects;
 using NuGet.ProjectModel;
 using NuGet.Versioning;
 using NuGet.VisualStudio;
-using EnvDTEProject = EnvDTE.Project;
 using PackageReference = NuGet.Packaging.PackageReference;
 using Task = System.Threading.Tasks.Task;
 
@@ -63,6 +62,8 @@ namespace NuGet.PackageManagement.VisualStudio
             _projectName = projectName;
             _projectUniqueName = projectUniqueName;
             _projectFullPath = projectFullPath;
+
+            ProjectStyle = ProjectStyle.PackageReference;
 
             _projectSystemCache = projectSystemCache;
             _vsProjectAdapter = vsProjectAdapter;

@@ -22,7 +22,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 { VsProjectTypes.WixProjectTypeGuid, (project, nuGetProjectContext) => new WixProjectSystem(project, nuGetProjectContext) },
                 { VsProjectTypes.JsProjectTypeGuid, (project, nuGetProjectContext) => new JsProjectSystem(project, nuGetProjectContext) },
                 { VsProjectTypes.WindowsStoreProjectTypeGuid, (project, nuGetProjectContext) => new WindowsStoreProjectSystem(project, nuGetProjectContext) },
-                { VsProjectTypes.DeploymentProjectTypeGuid, (project, nuGetProjectContext) => new VSMSBuildNuGetProjectSystem(project, nuGetProjectContext) }
+                { VsProjectTypes.DeploymentProjectTypeGuid, (project, nuGetProjectContext) => new VsMSBuildProjectSystem(project, nuGetProjectContext) }
             };
 
         public static IMSBuildNuGetProjectSystem CreateMSBuildNuGetProjectSystem(IVsProjectAdapter vsProjectAdapter, INuGetProjectContext nuGetProjectContext)
@@ -64,7 +64,7 @@ namespace NuGet.PackageManagement.VisualStudio
             }
 
             // Fall back to the default if we have no special project types
-            return new VSMSBuildNuGetProjectSystem(vsProjectAdapter, nuGetProjectContext);
+            return new VsMSBuildProjectSystem(vsProjectAdapter, nuGetProjectContext);
         }
     }
 }

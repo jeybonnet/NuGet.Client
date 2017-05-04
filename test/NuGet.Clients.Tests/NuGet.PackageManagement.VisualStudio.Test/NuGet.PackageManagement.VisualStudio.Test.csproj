@@ -20,7 +20,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup Condition="'$(VisualStudioVersion)' == '15.0'">
-    <Compile Include="ProjectSystems\LegacyCSProjPackageReferenceProjectTests.cs" />
+    <Compile Include="ProjectSystems\LegacyPackageReferenceProjectTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DispatcherThreadCollection.cs" />
