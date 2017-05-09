@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -58,15 +58,21 @@ namespace NuGet.Packaging.Test
 
                             sem.Wait();
 
-                            var installed = await PackageExtractor.InstallFromSourceAsync(
-                                packageStream.CopyToAsync,
-                                pathContext,
-                                CancellationToken.None);
+                            using (var packageDownloader = new LocalPackageArchiveDownloader(
+                                sourcePathResolver.GetPackageFilePath(identity.Id, identity.Version),
+                                identity,
+                                NullLogger.Instance))
+                            {
+                                var installed = await PackageExtractor.InstallFromSourceAsync(
+                                    packageDownloader,
+                                    pathContext,
+                                    CancellationToken.None);
 
-                            var exists = File.Exists(hashPath);
+                                var exists = File.Exists(hashPath);
 
-                            installedBag.Add(installed);
-                            hashBag.Add(exists);
+                                installedBag.Add(installed);
+                                hashBag.Add(exists);
+                            }
                         }
                     });
 
@@ -105,11 +111,14 @@ namespace NuGet.Packaging.Test
                 var packagesPath = Path.Combine(root, "packages");
                 await SimpleTestPackageUtility.CreateFolderFeedV3(packagesPath, identity);
 
-                using (var packageStream = File.OpenRead(packageFileInfo.FullName))
+                using (var packageDownloader = new LocalPackageArchiveDownloader(
+                    packageFileInfo.FullName,
+                    identity,
+                    NullLogger.Instance))
                 {
                     // Act
                     var installed = await PackageExtractor.InstallFromSourceAsync(
-                        packageStream.CopyToAsync,
+                        packageDownloader,
                         new VersionFolderPathContext(
                             identity,
                             packagesPath,
@@ -143,11 +152,14 @@ namespace NuGet.Packaging.Test
 
                 var packagesPath = Path.Combine(root, "packages");
 
-                using (var packageStream = File.OpenRead(packageFileInfo.FullName))
+                using (var packageDownloader = new LocalPackageArchiveDownloader(
+                    packageFileInfo.FullName,
+                    identity,
+                    NullLogger.Instance))
                 {
                     // Act
                     var installed = await PackageExtractor.InstallFromSourceAsync(
-                        packageStream.CopyToAsync,
+                        packageDownloader,
                         new VersionFolderPathContext(
                             identity,
                             packagesPath,
@@ -184,18 +196,21 @@ namespace NuGet.Packaging.Test
                 var packagesPath = Path.Combine(root, "packages");
                 var resolver = new VersionFolderPathResolver(packagesPath, isLowercase);
 
-                using (var packageStream = File.OpenRead(packageFileInfo.FullName))
+                using (var packageDownloader = new LocalPackageArchiveDownloader(
+                    packageFileInfo.FullName,
+                    identity,
+                    NullLogger.Instance))
                 {
                     // Act
                     await PackageExtractor.InstallFromSourceAsync(
-                        packageStream.CopyToAsync,
+                        packageDownloader,
                         new VersionFolderPathContext(
                             identity,
                             packagesPath,
                             isLowercase,
-                            new TestLogger(),
-                            packageSaveMode: PackageSaveMode.Nupkg,
-                            xmlDocFileSaveMode: XmlDocFileSaveMode.None),
+                            NullLogger.Instance,
+                            PackageSaveMode.Nupkg,
+                            XmlDocFileSaveMode.None),
                         CancellationToken.None);
 
                     // Assert
@@ -237,13 +252,18 @@ namespace NuGet.Packaging.Test
                     nuspecEntry.Delete();
                 }
 
-                using (var packageStream = File.OpenRead(packageFile))
+                var packageIdentity = new PackageIdentity("a", NuGetVersion.Parse("1.0.0"));
+
+                using (var packageDownloader = new LocalPackageArchiveDownloader(
+                    packageFile,
+                    packageIdentity,
+                    NullLogger.Instance))
                 {
                     // Act
                     await PackageExtractor.InstallFromSourceAsync(
-                        packageStream.CopyToAsync,
+                        packageDownloader,
                         new VersionFolderPathContext(
-                            new PackageIdentity("a", NuGetVersion.Parse("1.0.0")),
+                            packageIdentity,
                             root,
                             NullLogger.Instance,
                             packageSaveMode: PackageSaveMode.Defaultv3,
@@ -275,14 +295,18 @@ namespace NuGet.Packaging.Test
                 SimpleTestPackageUtility.CreatePackages(root, packageA);
 
                 var packageFile = Path.Combine(root, "a.1.0.0.nupkg");
+                var packageIdentity = new PackageIdentity("a", NuGetVersion.Parse("1.0.0"));
 
-                using (var packageStream = File.OpenRead(packageFile))
+                using (var packageDownloader = new LocalPackageArchiveDownloader(
+                    packageFile,
+                    packageIdentity,
+                    NullLogger.Instance))
                 {
                     // Act
                     await PackageExtractor.InstallFromSourceAsync(
-                        packageStream.CopyToAsync,
+                        packageDownloader,
                         new VersionFolderPathContext(
-                            new PackageIdentity("a", NuGetVersion.Parse("1.0.0")),
+                            packageIdentity,
                             root,
                             NullLogger.Instance,
                             packageSaveMode: PackageSaveMode.Defaultv3,
@@ -1097,11 +1121,14 @@ namespace NuGet.Packaging.Test
                    DateTimeOffset.UtcNow.LocalDateTime,
                    "lib/net45/A.dll");
 
-                using (var packageStream = File.OpenRead(packageFileInfo.FullName))
+                using (var packageDownloader = new LocalPackageArchiveDownloader(
+                    packageFileInfo.FullName,
+                    identity,
+                    NullLogger.Instance))
                 {
                     // Act
                     await PackageExtractor.InstallFromSourceAsync(
-                        packageStream.CopyToAsync,
+                        packageDownloader,
                         new VersionFolderPathContext(
                             identity,
                             root,
@@ -1133,11 +1160,14 @@ namespace NuGet.Packaging.Test
                    DateTimeOffset.UtcNow.LocalDateTime,
                    "lib/net45/A.dll");
 
-                using (var packageStream = File.OpenRead(packageFileInfo.FullName))
+                using (var packageDownloader = new LocalPackageArchiveDownloader(
+                    packageFileInfo.FullName,
+                    identity,
+                    NullLogger.Instance))
                 {
                     // Act
                     await PackageExtractor.InstallFromSourceAsync(
-                        packageStream.CopyToAsync,
+                        packageDownloader,
                         new VersionFolderPathContext(
                             identity,
                             root,
@@ -1170,11 +1200,14 @@ namespace NuGet.Packaging.Test
                    DateTimeOffset.UtcNow.LocalDateTime,
                    "lib/net45/A.dll");
 
-                using (var packageStream = File.OpenRead(packageFileInfo.FullName))
+                using (var packageDownloader = new LocalPackageArchiveDownloader(
+                    packageFileInfo.FullName,
+                    identity,
+                    NullLogger.Instance))
                 {
                     // Act
                     await PackageExtractor.InstallFromSourceAsync(
-                        packageStream.CopyToAsync,
+                        packageDownloader,
                         new VersionFolderPathContext(
                             identity,
                             root,
