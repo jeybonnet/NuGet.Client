@@ -75,7 +75,7 @@ namespace NuGet.PackageManagement.VisualStudio
             {
                 if (_buildSystem == null)
                 {
-                    _buildSystem = VsProjectAdapter.ProjectBuildSystem;
+                    _buildSystem = EnvDTEProjectUtility.GetVsProjectBuildSystem(VsProjectAdapter.Project);
                 }
 
                 return _buildSystem;
@@ -342,7 +342,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 {
                     if (IsReferenceUnavailableException(e))
                     {
-                        var frameworkName = VsProjectAdapter.GetDotNetFrameworkName();
+                        var frameworkName = EnvDTEProjectInfoUtility.GetDotNetFrameworkName(VsProjectAdapter.Project);
 
                         if (FrameworkAssemblyResolver.IsFrameworkFacade(name, frameworkName))
                         {

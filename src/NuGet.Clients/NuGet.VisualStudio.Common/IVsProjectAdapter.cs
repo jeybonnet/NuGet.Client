@@ -43,8 +43,6 @@ namespace NuGet.VisualStudio
         /// </summary>
         EnvDTE.Project Project { get; }
 
-        IVsProjectBuildSystem ProjectBuildSystem { get; }
-
         string ProjectId { get; }
 
         string ProjectName { get; }
@@ -69,15 +67,9 @@ namespace NuGet.VisualStudio
 
         IVsHierarchy VsHierarchy { get; }
 
-        HashSet<string> GetAssemblyClosure(IDictionary<string, HashSet<string>> visitedProjects);
-
         IEnumerable<string> GetChildItems(string path, string filter, string desiredKind);
 
-        string GetConfigurationFile();
-
         Task<IReadOnlyList<ProjectRestoreReference>> GetDirectProjectReferencesAsync(IEnumerable<string> resolvedProjects, ILogger log);
-
-        FrameworkName GetDotNetFrameworkName();
 
         IEnumerable<string> GetFullPaths(string fileName);
 

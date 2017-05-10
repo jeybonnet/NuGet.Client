@@ -129,18 +129,18 @@ namespace NuGet.PackageManagement.VisualStudio
             // Get the full path from envDTEProject
             var root = vsProjectAdapter.FullPath;
 
-            IEnumerable<string> assemblies = vsProjectAdapter.GetAssemblyClosure(projectAssembliesCache);
+            IEnumerable<string> assemblies = EnvDTEProjectUtility.GetAssemblyClosure(vsProjectAdapter.Project, projectAssembliesCache);
             redirects = BindingRedirectResolver.GetBindingRedirects(assemblies, domain);
 
             if (frameworkMultiTargeting != null)
             {
                 // filter out assemblies that already exist in the target framework (CodePlex issue #3072)
-                var targetFrameworkName = vsProjectAdapter.GetDotNetFrameworkName();
+                var targetFrameworkName = EnvDTEProjectInfoUtility.GetDotNetFrameworkName(vsProjectAdapter.Project);
                 redirects = redirects.Where(p => !FrameworkAssemblyResolver.IsHigherAssemblyVersionInFramework(p.Name, p.AssemblyNewVersion, targetFrameworkName));
             }
 
             // Create a binding redirect manager over the configuration
-            var manager = new BindingRedirectManager(vsProjectAdapter.GetConfigurationFile(), msBuildNuGetProjectSystem);
+            var manager = new BindingRedirectManager(EnvDTEProjectInfoUtility.GetConfigurationFile(vsProjectAdapter.Project), msBuildNuGetProjectSystem);
 
             // Add the redirects
             manager.AddBindingRedirects(redirects);

@@ -1,4 +1,4 @@
-param([parameter(Mandatory = $true)]
+﻿param([parameter(Mandatory = $true)]
       [string]$OutputPath,
       [parameter(Mandatory = $true)]
       [string]$TemplatePath)
@@ -79,6 +79,13 @@ function Wait-OnNetCoreRestoreCompletion{
         }
         Start-Sleep -Seconds 1
     }
+}
+
+function WaitForSolutionLoad
+{
+    Write-Verbose "waiting for loading solution"
+
+    [API.Test.VSSolutionHelper]::WaitForSolutionLoad()
 }
 
 function New-NetCoreConsoleApp

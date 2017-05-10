@@ -115,8 +115,6 @@ namespace NuGet.PackageManagement.VisualStudio
             }
         }
 
-        public IVsProjectBuildSystem ProjectBuildSystem => EnvDTEProjectUtility.GetVsProjectBuildSystem(Project);
-
         public string ProjectId
         {
             get
@@ -259,11 +257,6 @@ namespace NuGet.PackageManagement.VisualStudio
 
         #region Getters
 
-        public HashSet<string> GetAssemblyClosure(IDictionary<string, HashSet<string>> visitedProjects)
-        {
-            return EnvDTEProjectUtility.GetAssemblyClosure(Project, visitedProjects);
-        }
-
         public string GetBuildProperty(string propertyName)
         {
             return VsHierarchyUtility.GetBuildProperty(AsVsBuildPropertyStorage, propertyName);
@@ -280,11 +273,6 @@ namespace NuGet.PackageManagement.VisualStudio
                 return from p in childItems
                        select p.Name;
             });
-        }
-
-        public string GetConfigurationFile()
-        {
-            return EnvDTEProjectInfoUtility.GetConfigurationFile(Project);
         }
 
         public async Task<IReadOnlyList<ProjectRestoreReference>> GetDirectProjectReferencesAsync(IEnumerable<string> resolvedProjects, Common.ILogger logger)
@@ -305,11 +293,6 @@ namespace NuGet.PackageManagement.VisualStudio
             {
                 return await VSProjectRestoreReferenceUtility.GetDirectProjectReferencesAsync(Project, resolvedProjects, logger);
             }
-        }
-
-        public FrameworkName GetDotNetFrameworkName()
-        {
-            return EnvDTEProjectInfoUtility.GetDotNetFrameworkName(Project);
         }
 
         public IEnumerable<string> GetFullPaths(string fileName)
