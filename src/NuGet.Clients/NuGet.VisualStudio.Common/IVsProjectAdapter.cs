@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
-using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell.Interop;
 using NuGet.Frameworks;
@@ -71,10 +70,6 @@ namespace NuGet.VisualStudio
         IVsHierarchy VsHierarchy { get; }
 
         Task<bool> EntityExists(string filePath);
-
-        string GetConfigurationFile();
-
-        FrameworkName GetDotNetFrameworkName();
 
         IEnumerable<string> GetReferencedProjects();
 

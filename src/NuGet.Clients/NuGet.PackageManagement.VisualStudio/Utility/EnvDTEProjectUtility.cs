@@ -406,7 +406,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 return true;
             }
 
-            return envDTEProject.Kind != null && ProjectTypesConstant.SupportedProjectTypes.Contains(envDTEProject.Kind) && !HasUnsupportedProjectCapability(envDTEProject);
+            return envDTEProject.Kind != null && ProjectTypesConstants.SupportedProjectTypes.Contains(envDTEProject.Kind) && !HasUnsupportedProjectCapability(envDTEProject);
         }
 
         private static bool IsProjectCapabilityCompliant(EnvDTE.Project envDTEProject)
@@ -659,7 +659,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            return envDTEProject.Kind == null || ProjectTypesConstant.UnsupportedProjectTypes.Contains(envDTEProject.Kind);
+            return envDTEProject.Kind == null || ProjectTypesConstants.UnsupportedProjectTypes.Contains(envDTEProject.Kind);
         }
 
         public static bool IsParentProjectExplicitlyUnsupported(EnvDTE.Project envDTEProject)
@@ -730,7 +730,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            return (envDTEProject.Kind != null & !ProjectTypesConstant.UnsupportedProjectTypesForBindingRedirects.Contains(envDTEProject.Kind, StringComparer.OrdinalIgnoreCase)) &&
+            return (envDTEProject.Kind != null & !ProjectTypesConstants.UnsupportedProjectTypesForBindingRedirects.Contains(envDTEProject.Kind, StringComparer.OrdinalIgnoreCase)) &&
                    !EnvDTEProjectInfoUtility.IsWindowsStoreApp(envDTEProject);
         }
 
@@ -739,7 +739,7 @@ namespace NuGet.PackageManagement.VisualStudio
             ThreadHelper.ThrowIfNotOnUIThread();
 
             return envDTEProject.Kind != null &&
-                   !ProjectTypesConstant.UnsupportedProjectTypesForAddingReferences.Contains(envDTEProject.Kind, StringComparer.OrdinalIgnoreCase);
+                   !ProjectTypesConstants.UnsupportedProjectTypesForAddingReferences.Contains(envDTEProject.Kind, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>

@@ -72,7 +72,7 @@ namespace NuGet.PackageManagement.PowerShellCmdlets
                 else
                 {
                     // get all projects matching name(s) - handles wildcards
-                    WriteObject(GetProjectsByName(Name), enumerateCollection: true);
+                    WriteObject(GetProjectsByName(Name).Select(p => p.Project), enumerateCollection: true);
                 }
             }
         }

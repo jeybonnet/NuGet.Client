@@ -802,7 +802,7 @@ namespace NuGet.PackageManagement.VisualStudio
             {
                 if (IsReferenceUnavailableException(e))
                 {
-                    var frameworkName = VsProjectAdapter.GetDotNetFrameworkName();
+                    var frameworkName = EnvDTEProjectInfoUtility.GetDotNetFrameworkName(VsProjectAdapter.Project);
 
                     if (FrameworkAssemblyResolver.IsFrameworkFacade(name, frameworkName))
                     {

@@ -6,11 +6,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using NuGet.Commands;
 using NuGet.Frameworks;
@@ -238,16 +236,6 @@ namespace NuGet.PackageManagement.VisualStudio
             }
         }
 
-        public string GetConfigurationFile()
-        {
-            return EnvDTEProjectInfoUtility.GetConfigurationFile(Project);
-        }
-
-        public FrameworkName GetDotNetFrameworkName()
-        {
-            return EnvDTEProjectInfoUtility.GetDotNetFrameworkName(Project);
-        }
-
         public IEnumerable<string> GetReferencedProjects()
         {
             if (!IsDeferred)
@@ -324,9 +312,9 @@ namespace NuGet.PackageManagement.VisualStudio
             return nugetFramework;
         }
 
-        #endregion Getters
+#endregion Getters
 
-        #region Capabilities
+#region Capabilities
 
         public bool SupportsBindingRedirects
         {
@@ -354,11 +342,11 @@ namespace NuGet.PackageManagement.VisualStudio
                 }
                 else
                 {
-                    return !ProjectTypeGuids.Any(p => ProjectTypesConstant.UnsupportedProjectTypesForAddingReferences.Contains(p));
+                    return !ProjectTypeGuids.Any(p => ProjectTypesConstants.UnsupportedProjectTypesForAddingReferences.Contains(p));
                 }
             }
         }
 
-        #endregion Capablities
+#endregion Capablities
     }
 }

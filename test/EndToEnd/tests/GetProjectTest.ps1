@@ -1,4 +1,4 @@
-function Test-ProjectNameReturnsUniqueName {
+﻿function Test-ProjectNameReturnsUniqueName {
      # Arrange
      New-SolutionFolder 'Folder1'
      $p1 = New-ClassLibrary 'ProjectA' 'Folder1'
@@ -223,6 +223,7 @@ function Test-AmbiguousStartupProject {
 
     # Re open the solution
     Open-Solution($solutionFile)
+    WaitForSolutionLoad
     $p1 = Get-Project foo\A
     $p2 = Get-Project A
 
