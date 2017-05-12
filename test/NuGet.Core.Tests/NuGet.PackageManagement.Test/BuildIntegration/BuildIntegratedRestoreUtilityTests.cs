@@ -47,7 +47,7 @@ namespace NuGet.Test
                 var projectTargetFramework = NuGetFramework.Parse("uap10.0");
                 var msBuildNuGetProjectSystem = new TestMSBuildNuGetProjectSystem(projectTargetFramework,
                     new TestNuGetProjectContext());
-                var project = new ProjectJsonBuildIntegratedNuGetProject(projectConfig.FullName, msbuildProjectPath.FullName, msBuildNuGetProjectSystem);
+                var project = new ProjectJsonNuGetProject(projectConfig.FullName, msbuildProjectPath.FullName);
 
                 var solutionManager = new TestSolutionManager(false);
                 solutionManager.NuGetProjects.Add(project);
@@ -97,7 +97,7 @@ namespace NuGet.Test
                 var projectTargetFramework = NuGetFramework.Parse("uap10.0");
                 var msBuildNuGetProjectSystem = new TestMSBuildNuGetProjectSystem(projectTargetFramework,
                     new TestNuGetProjectContext());
-                var project = new ProjectJsonBuildIntegratedNuGetProject(projectConfig.FullName, msbuildProjectPath.FullName, msBuildNuGetProjectSystem);
+                var project = new ProjectJsonNuGetProject(projectConfig.FullName, msbuildProjectPath.FullName);
 
                 var solutionManager = new TestSolutionManager(false);
                 solutionManager.NuGetProjects.Add(project);
@@ -148,7 +148,7 @@ namespace NuGet.Test
                 var projectTargetFramework = NuGetFramework.Parse("uap10.0");
                 var msBuildNuGetProjectSystem = new TestMSBuildNuGetProjectSystem(projectTargetFramework,
                     new TestNuGetProjectContext());
-                var project = new ProjectJsonBuildIntegratedNuGetProject(projectConfig.FullName, msbuildProjectPath.FullName, msBuildNuGetProjectSystem);
+                var project = new ProjectJsonNuGetProject(projectConfig.FullName, msbuildProjectPath.FullName);
 
                 var configContents = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <configuration>

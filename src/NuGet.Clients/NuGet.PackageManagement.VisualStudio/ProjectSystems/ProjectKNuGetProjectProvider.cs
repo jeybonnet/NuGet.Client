@@ -10,9 +10,9 @@ using NuGet.VisualStudio;
 
 namespace NuGet.PackageManagement.VisualStudio
 {
-    [Export(typeof(IProjectSystemProvider))]
+    [Export(typeof(INuGetProjectProvider))]
     [Name(nameof(ProjectKNuGetProjectProvider))]
-    public class ProjectKNuGetProjectProvider : IProjectSystemProvider
+    public class ProjectKNuGetProjectProvider : INuGetProjectProvider
     {
         public bool TryCreateNuGetProject(IVsProjectAdapter project, ProjectSystemProviderContext context, out NuGetProject result)
         {
@@ -23,7 +23,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            if (project.IsLoadDeferred)
+            if (project.IsDeferred)
             {
                 return false;
             }

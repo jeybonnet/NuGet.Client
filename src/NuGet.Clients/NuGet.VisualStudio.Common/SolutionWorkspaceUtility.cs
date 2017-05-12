@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft;
@@ -53,13 +52,6 @@ namespace NuGet.VisualStudio
             Assumes.Present(dataService);
 
             return (await dataService.GetProjectProperty(propertyName)).EvaluatedValue;
-        }
-
-        public static async Task<IEnumerable<MSBuildProjectItemData>> GetProjectItemsAsync(IMSBuildProjectDataService dataService, string itemType)
-        {
-            Assumes.Present(dataService);
-
-            return await dataService.GetProjectItems(itemType);
         }
     }
 }

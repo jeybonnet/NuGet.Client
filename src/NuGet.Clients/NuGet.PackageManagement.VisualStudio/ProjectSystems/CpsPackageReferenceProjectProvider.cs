@@ -3,10 +3,10 @@
 
 using System;
 using System.ComponentModel.Composition;
+using Microsoft;
 using Microsoft.VisualStudio.ProjectSystem;
 using Microsoft.VisualStudio.ProjectSystem.Properties;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Utilities;
 using NuGet.ProjectManagement;
 using NuGet.ProjectModel;
@@ -17,14 +17,12 @@ namespace NuGet.PackageManagement.VisualStudio
     /// <summary>
     /// Provides a method of creating <see cref="CpsPackageReferenceProject"/> instance.
     /// </summary>
-    [Export(typeof(IProjectSystemProvider))]
+    [Export(typeof(INuGetProjectProvider))]
     [Name(nameof(CpsPackageReferenceProjectProvider))]
     [Microsoft.VisualStudio.Utilities.Order(After = nameof(ProjectKNuGetProjectProvider))]
-    public class CpsPackageReferenceProjectProvider : IProjectSystemProvider
+    public class CpsPackageReferenceProjectProvider : INuGetProjectProvider
     {
-        private const string RestoreProjectStyle = "RestoreProjectStyle";
-        private const string TargetFramework = "TargetFramework";
-        private const string TargetFrameworks = "TargetFrameworks";
+        private static readonly string PackageReference = ProjectStyle.PackageReference.ToString();
 
         private readonly IProjectSystemCache _projectSystemCache;
 
@@ -36,10 +34,7 @@ namespace NuGet.PackageManagement.VisualStudio
         [ImportingConstructor]
         public CpsPackageReferenceProjectProvider(IProjectSystemCache projectSystemCache)
         {
-            if (projectSystemCache == null)
-            {
-                throw new ArgumentNullException(nameof(projectSystemCache));
-            }
+            Assumes.Present(projectSystemCache);
 
             _projectSystemCache = projectSystemCache;
         }
@@ -74,18 +69,16 @@ namespace NuGet.PackageManagement.VisualStudio
                 return false;
             }
 
-            var buildPropertyStorage = hierarchy as IVsBuildPropertyStorage;
+            var buildProperties = vsProject.BuildProperties;
 
             // read MSBuild property RestoreProjectStyle, TargetFramework, and TargetFrameworks
-            var restoreProjectStyle = VsHierarchyUtility.GetBuildProperty(buildPropertyStorage, RestoreProjectStyle);
-
-            var targetFramework = VsHierarchyUtility.GetBuildProperty(buildPropertyStorage, TargetFramework);
-
-            var targetFrameworks = VsHierarchyUtility.GetBuildProperty(buildPropertyStorage, TargetFrameworks);
+            var restoreProjectStyle = buildProperties.GetPropertyValue(ProjectBuildProperties.RestoreProjectStyle);
+            var targetFramework = buildProperties.GetPropertyValue(ProjectBuildProperties.TargetFramework);
+            var targetFrameworks = buildProperties.GetPropertyValue(ProjectBuildProperties.TargetFrameworks);
 
             // check for RestoreProjectStyle property is set and if not set to PackageReference then return false
             if (!(string.IsNullOrEmpty(restoreProjectStyle) || 
-                restoreProjectStyle.Equals(ProjectStyle.PackageReference.ToString(), StringComparison.OrdinalIgnoreCase)))
+                restoreProjectStyle.Equals(PackageReference, StringComparison.OrdinalIgnoreCase)))
             {
                 return false;
             }

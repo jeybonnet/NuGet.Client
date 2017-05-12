@@ -8,7 +8,7 @@ using NuGet.VisualStudio;
 
 namespace NuGet.PackageManagement.VisualStudio
 {
-    public class WindowsStoreProjectSystem : VSMSBuildNuGetProjectSystem
+    public class WindowsStoreProjectSystem : VsMSBuildProjectSystem
     {
         public WindowsStoreProjectSystem(IVsProjectAdapter vsProjectAdapter, INuGetProjectContext nuGetProjectContext)
             : base(vsProjectAdapter, nuGetProjectContext)

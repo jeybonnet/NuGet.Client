@@ -9,7 +9,7 @@ namespace NuGet.PackageManagement.VisualStudio
     /// <summary>
     /// Represents a provider interface capable of instantiating <see cref="NuGetProject"/>.
     /// </summary>
-    public interface IProjectSystemProvider
+    public interface INuGetProjectProvider
     {
         /// <summary>
         /// Attempts to create a <see cref="NuGetProject"/> instance if the input DTE project

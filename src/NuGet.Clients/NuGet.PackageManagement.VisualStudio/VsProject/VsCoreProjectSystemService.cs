@@ -4,61 +4,72 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
-using NuGet.Common;
+using NuGet.Frameworks;
+using NuGet.LibraryModel;
+using NuGet.ProjectManagement;
 using NuGet.ProjectModel;
 using NuGet.VisualStudio;
 using VSLangProj;
 using VSLangProj80;
-using EnvDTEProject = EnvDTE.Project;
 
 namespace NuGet.PackageManagement.VisualStudio
 {
-    public static class VSProjectRestoreReferenceUtility
+    /// <summary>
+    /// Represents a project in the integrated development environment (IDE).
+    /// </summary>
+    internal class VsCoreProjectSystemService 
+        : IProjectSystemCapabilities
+        , IProjectSystemReferencesReader
     {
-        /// <summary>
-        /// Get only the direct dependencies from a project
-        /// </summary>
-        public static async Task<IReadOnlyList<ProjectRestoreReference>> GetDirectProjectReferencesAsync(
-            EnvDTEProject project,
-            IEnumerable<string> resolvedProjects,
-            ILogger log)
+        private readonly EnvDTE.Project _project;
+        private readonly IVsProjectThreadingService _threadingService;
+
+        public bool SupportsPackageReferences => false;
+
+        public VsCoreProjectSystemService(
+            IVsProjectAdapter vsProjectAdapter,
+            INuGetProjectServices projectServices)
+        {
+            Assumes.Present(vsProjectAdapter);
+            Assumes.Present(projectServices);
+
+            _project = vsProjectAdapter.Project;
+            Assumes.Present(_project);
+
+            _threadingService = projectServices.GetService<IVsProjectThreadingService>();
+            Assumes.Present(_threadingService);
+        }
+
+        public async Task<IEnumerable<ProjectRestoreReference>> GetProjectReferencesAsync(Common.ILogger logger)
         {
             // DTE calls need to be done from the main thread
-            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _threadingService.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var results = new List<ProjectRestoreReference>();
 
             var itemsFactory = ServiceLocator.GetInstance<IVsEnumHierarchyItemsFactory>();
 
             // Verify ReferenceOutputAssembly
-            var excludedProjects = GetExcludedReferences(project, itemsFactory);
+            var excludedProjects = GetExcludedReferences(itemsFactory);
             var hasMissingReferences = false;
 
             // find all references in the project
-            foreach (var childReference in GetProjectReferences(project))
+            foreach (var childReference in GetProjectReferences())
             {
                 try
                 {
                     var reference3 = childReference as Reference3;
 
-                    // check if deferred projects resolved this reference, which means this is still not loaded so simply continue
-                    // We'll get this reference from deferred projects later
-                    if (reference3 != null &&
-                    resolvedProjects.Contains(reference3.Name, StringComparer.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
                     // Set missing reference if
                     // 1. reference is null OR
                     // 2. reference is not resolved which means project is not loaded or assembly not found.
-                    else if (reference3 == null || !reference3.Resolved)
+                    if (reference3 == null || !reference3.Resolved)
                     {
                         // Skip missing references and show a warning
                         hasMissingReferences = true;
@@ -96,7 +107,7 @@ namespace NuGet.PackageManagement.VisualStudio
                     // ignore them and show a warning
                     hasMissingReferences = true;
 
-                    log.LogDebug(ex.ToString());
+                    logger.LogDebug(ex.ToString());
 
                     Debug.Fail("Unable to find project dependencies: " + ex.ToString());
                 }
@@ -110,17 +121,17 @@ namespace NuGet.PackageManagement.VisualStudio
                 var message = string.Format(
                     CultureInfo.CurrentCulture,
                     Strings.UnresolvedItemDuringProjectClosureWalk,
-                    EnvDTEProjectInfoUtility.GetUniqueName(project));
+                    EnvDTEProjectInfoUtility.GetUniqueName(_project));
 
-                log.LogVerbose(message);
+                logger.LogVerbose(message);
             }
 
             return results;
         }
 
-        private static IEnumerable<Reference> GetProjectReferences(EnvDTEProject project)
+        private IEnumerable<Reference> GetProjectReferences()
         {
-            var langProject = project.Object as VSProject;
+            var langProject = _project.Object as VSProject;
             if (langProject != null)
             {
                 foreach (var reference in langProject.References.Cast<Reference>())
@@ -133,14 +144,14 @@ namespace NuGet.PackageManagement.VisualStudio
         /// <summary>
         /// Get the unique names of all references which have ReferenceOutputAssembly set to false.
         /// </summary>
-        [SuppressMessage("Microsoft.VisualStudio.Threading.Analyzers", "VSTHRD010", Justification = "NuGet/Home#4833 Baseline")]
-        private static List<string> GetExcludedReferences(
-            EnvDTEProject project,
+        private IList<string> GetExcludedReferences(
             IVsEnumHierarchyItemsFactory itemsFactory)
         {
+            _threadingService.VerifyOnUIThread();
+
             var excludedReferences = new List<string>();
 
-            var hierarchy = VsHierarchyUtility.ToVsHierarchy(project);
+            var hierarchy = VsHierarchyUtility.ToVsHierarchy(_project);
 
             // Get all items in the hierarchy, this includes project references, files, and everything else.
             IEnumHierarchyItems items;
@@ -154,7 +165,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
                 // Loop through all items
                 uint fetched;
-                VSITEMSELECTION[] item = new VSITEMSELECTION[1];
+                var item = new VSITEMSELECTION[1];
                 while (ErrorHandler.Succeeded(items.Next(1, item, out fetched)) && fetched == 1)
                 {
                     // Check if the item has ReferenceOutputAssembly. This will
@@ -196,6 +207,11 @@ namespace NuGet.PackageManagement.VisualStudio
             }
 
             return excludedReferences;
+        }
+
+        public Task<IReadOnlyList<LibraryDependency>> GetPackageReferencesAsync(NuGetFramework targetFramework)
+        {
+            throw new NotSupportedException();
         }
     }
 }

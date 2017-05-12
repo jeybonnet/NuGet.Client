@@ -81,7 +81,7 @@ namespace Test.Utility
                 projectFullPath, projectName);
 
             var projectFilePath = Path.Combine(projectFullPath, $"{msBuildNuGetProjectSystem.ProjectName}.csproj");
-            NuGetProject nuGetProject = new ProjectJsonBuildIntegratedNuGetProject(projectJsonPath, projectFilePath);
+            NuGetProject nuGetProject = new ProjectJsonNuGetProject(projectJsonPath, projectFilePath);
             NuGetProjects.Add(nuGetProject);
             return nuGetProject;
         }
@@ -201,11 +201,6 @@ namespace Test.Utility
             {
                 ActionsExecuted(this, new ActionsExecutedEventArgs(actions));
             }
-        }
-
-        public void SaveProject(NuGetProject nuGetProject)
-        {
-            //do nothing.
         }
 
         public void Dispose()

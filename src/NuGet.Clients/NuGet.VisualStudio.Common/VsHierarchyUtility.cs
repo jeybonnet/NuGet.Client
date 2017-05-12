@@ -37,38 +37,6 @@ namespace NuGet.VisualStudio
             return hierarchy;
         }
 
-        public static string GetMSBuildProperty(IVsHierarchy pHierarchy, string name)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-            var buildPropertyStorage = pHierarchy as IVsBuildPropertyStorage;
-
-            return GetBuildProperty(buildPropertyStorage, name);
-        }
-
-        public static string GetBuildProperty(IVsBuildPropertyStorage buildPropertyStorage, string name)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-            string output = null;
-
-            if (buildPropertyStorage != null)
-            {
-                var result = buildPropertyStorage.GetPropertyValue(
-                    pszPropName: name,
-                    pszConfigName: null,
-                    storage: (uint)_PersistStorageType.PST_PROJECT_FILE,
-                    pbstrPropValue: out output);
-
-                if (result != VSConstants.S_OK || string.IsNullOrWhiteSpace(output))
-                {
-                    return null;
-                }
-            }
-
-            return output;
-        }
-
         public static string GetProjectPath(IVsHierarchy project)
         {
             ThreadHelper.ThrowIfNotOnUIThread();

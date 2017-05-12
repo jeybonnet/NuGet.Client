@@ -8,7 +8,7 @@ using NuGet.ProjectManagement;
 namespace NuGet.PackageManagement.VisualStudio
 {
     /// <summary>
-    /// Additional data passed to <see cref="IProjectSystemProvider"/> method 
+    /// Additional data passed to <see cref="INuGetProjectProvider"/> method 
     /// to create project instance.
     /// </summary>
     public class ProjectSystemProviderContext

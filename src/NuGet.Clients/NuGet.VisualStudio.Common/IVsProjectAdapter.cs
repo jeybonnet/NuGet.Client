@@ -2,15 +2,11 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
-using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell.Interop;
-using NuGet.Common;
 using NuGet.Frameworks;
 using NuGet.ProjectManagement;
-using NuGet.ProjectModel;
 using NuGet.RuntimeModel;
-using VSLangProj;
 
 namespace NuGet.VisualStudio
 {
@@ -21,6 +17,8 @@ namespace NuGet.VisualStudio
         /// </summary>
         string BaseIntermediateOutputPath { get; }
 
+        IProjectBuildProperties BuildProperties { get; }
+
         string CustomUniqueName { get; }
 
         string FullName { get; }
@@ -29,7 +27,7 @@ namespace NuGet.VisualStudio
 
         string FullProjectPath { get; }
 
-        bool IsLoadDeferred { get; }
+        bool IsDeferred { get; }
 
         bool IsSupported { get; }
 
@@ -51,12 +49,16 @@ namespace NuGet.VisualStudio
 
         string[] ProjectTypeGuids { get; }
 
-        References References { get; }
-
         /// <summary>
         /// Project's supports (a.k.a guardrails). Should never be null but can be an empty sequence.
         /// </summary>
         IEnumerable<CompatibilityProfile> Supports { get; }
+
+        bool SupportsBindingRedirects { get; }
+
+        bool SupportsProjectSystemService { get; }
+
+        bool SupportsReference { get; }
 
         string UniqueName { get; }
 
@@ -67,21 +69,9 @@ namespace NuGet.VisualStudio
 
         IVsHierarchy VsHierarchy { get; }
 
-        IEnumerable<string> GetChildItems(string path, string filter, string desiredKind);
+        Task<bool> EntityExists(string filePath);
 
-        Task<IReadOnlyList<ProjectRestoreReference>> GetDirectProjectReferencesAsync(IEnumerable<string> resolvedProjects, ILogger log);
-
-        IEnumerable<string> GetFullPaths(string fileName);
-
-        string GetBuildProperty(string propertyName);
-
-        Task<EnvDTE.ProjectItem> GetProjectItemAsync(string path);
-
-        Task<EnvDTE.ProjectItems> GetProjectItemsAsync(string folderPath, bool createIfNotExists);
-
-        dynamic GetProjectProperty(string propertyName);
-
-        IList<IVsProjectAdapter> GetReferencedProjects();
+        IEnumerable<string> GetReferencedProjects();
 
         /// <summary>
         /// Project's runtime identifiers. Should never be null but can be an empty sequence.
@@ -91,26 +81,6 @@ namespace NuGet.VisualStudio
         /// <summary>
         /// Project's target framework
         /// </summary>
-        NuGetFramework GetTargetFramework();
-
         Task<NuGetFramework> GetTargetFrameworkAsync();
-
-        Task<bool> ContainsFile(string path);
-
-        bool SupportsBindingRedirects { get; }
-
-        bool SupportsProjectSystemService { get; }
-
-        bool SupportsReference { get; }
-
-        void AddImportStatement(string targetsPath, ImportLocation location);
-
-        Task<bool> DeleteProjectItemAsync(string path);
-
-        void EnsureCheckedOutIfExists(string root, string path);
-
-        void RemoveImportStatement(string targetsPath);
-
-        void Save();
     }
 }
