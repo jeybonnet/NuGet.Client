@@ -83,11 +83,13 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             get
             {
-                ThreadHelper.ThrowIfNotOnUIThread();
-
                 if (_buildSystem == null)
                 {
-                    _buildSystem = VsProjectAdapter.VsHierarchy as IVsProjectBuildSystem;
+                    NuGetUIThreadHelper.JoinableTaskFactory.Run(async delegate
+                    {
+                        await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                        _buildSystem = VsProjectAdapter.VsHierarchy as IVsProjectBuildSystem;
+                    });
                 }
 
                 return _buildSystem;
@@ -785,7 +787,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public Task<IEnumerable<ProjectRestoreReference>> GetProjectReferencesAsync(Common.ILogger logger)
         {
-            throw new NotImplementedException();
+            return Task.FromResult<IEnumerable<ProjectRestoreReference>>(Enumerable.Empty<ProjectRestoreReference>().ToList());
         }
 
         public async Task AddFrameworkReferenceAsync(string name, string packageId)

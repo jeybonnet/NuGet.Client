@@ -67,7 +67,7 @@ namespace NuGet.PackageManagement.VisualStudio
             result = null;
 
             var projectServices = _threadingService.ExecuteSynchronously(
-                () => TryCreateProjectServices(vsProjectAdapter));
+                () => TryCreateProjectServices(vsProjectAdapter, context));
 
             if (projectServices == null)
             {
@@ -89,7 +89,7 @@ namespace NuGet.PackageManagement.VisualStudio
         /// <summary>
         /// Is this project a non-CPS package reference based csproj?
         /// </summary>
-        private async Task<INuGetProjectServices> TryCreateProjectServices(IVsProjectAdapter vsProjectAdapter)
+        private async Task<INuGetProjectServices> TryCreateProjectServices(IVsProjectAdapter vsProjectAdapter, ProjectSystemProviderContext context)
         {
             var componentModel = await _componentModel.GetValueAsync();
 
@@ -120,7 +120,8 @@ namespace NuGet.PackageManagement.VisualStudio
                 return new DeferredProjectServicesProxy(
                     vsProjectAdapter,
                     () => CreateCoreProjectSystemServices(vsProjectAdapter, componentModel),
-                    componentModel);
+                    componentModel,
+                    _threadingService);
             }
             else
             {
@@ -135,7 +136,8 @@ namespace NuGet.PackageManagement.VisualStudio
                 // For legacy csproj, either the RestoreProjectStyle must be set to PackageReference or
                 // project has atleast one package dependency defined as PackageReference
                 if (PackageReference.Equals(restoreProjectStyle, StringComparison.OrdinalIgnoreCase)
-                    || (asVSProject4.PackageReferences?.InstalledPackages?.Length ?? 0) > 0)
+                    || (asVSProject4.PackageReferences?.InstalledPackages?.Length ?? 0) > 0 
+                    || context.NuGetProjectType == NuGetProjectTypeContext.LegacyPackageReferenceProject)
                 {
                     return CreateCoreProjectSystemServices(vsProjectAdapter, componentModel);
                 }

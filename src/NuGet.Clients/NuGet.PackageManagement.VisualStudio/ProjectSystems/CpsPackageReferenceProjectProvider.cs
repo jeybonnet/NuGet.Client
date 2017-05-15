@@ -77,15 +77,18 @@ namespace NuGet.PackageManagement.VisualStudio
             var targetFrameworks = buildProperties.GetPropertyValue(ProjectBuildProperties.TargetFrameworks);
 
             // check for RestoreProjectStyle property is set and if not set to PackageReference then return false
-            if (!(string.IsNullOrEmpty(restoreProjectStyle) || 
-                restoreProjectStyle.Equals(PackageReference, StringComparison.OrdinalIgnoreCase)))
+            if (context.NuGetProjectType != NuGetProjectTypeContext.CpsPackageReferenceProject)
             {
-                return false;
-            }
-            // check whether TargetFramework or TargetFrameworks property is set, else return false
-            else if (string.IsNullOrEmpty(targetFramework) && string.IsNullOrEmpty(targetFrameworks))
-            {
-                return false;
+                if (!(string.IsNullOrEmpty(restoreProjectStyle) ||
+                    restoreProjectStyle.Equals(PackageReference, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return false;
+                }
+                // check whether TargetFramework or TargetFrameworks property is set, else return false
+                else if (string.IsNullOrEmpty(targetFramework) && string.IsNullOrEmpty(targetFrameworks))
+                {
+                    return false;
+                }
             }
 
             // Lazy load the CPS enabled JoinableTaskFactory for the UI.

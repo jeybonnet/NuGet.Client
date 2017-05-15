@@ -15,11 +15,26 @@ namespace NuGet.PackageManagement.VisualStudio
         private readonly IComponentModel _componentModel;
         private readonly WorkspaceProjectServices _deferredProjectServices;
         private readonly Lazy<INuGetProjectServices> _fallbackProjectServices;
+        private readonly IVsProjectThreadingService _threadingService;
+
+        private bool IsDeferred
+        {
+            get
+            {
+               return _threadingService.JoinableTaskFactory.Run(async delegate
+               {
+                   await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                   return _vsProjectAdapter.IsDeferred;
+               });
+            }
+        }
 
         public DeferredProjectServicesProxy(
             IVsProjectAdapter vsProjectAdapter,
             Func<INuGetProjectServices> getFallbackProjectServices,
-            IComponentModel componentModel)
+            IComponentModel componentModel,
+            IVsProjectThreadingService threadingService)
         {
             Assumes.Present(vsProjectAdapter);
             Assumes.Present(getFallbackProjectServices);
@@ -28,7 +43,7 @@ namespace NuGet.PackageManagement.VisualStudio
             _vsProjectAdapter = vsProjectAdapter;
             _componentModel = componentModel;
             _fallbackProjectServices = new Lazy<INuGetProjectServices>(getFallbackProjectServices);
-
+            _threadingService = threadingService;
             _deferredProjectServices = new WorkspaceProjectServices(vsProjectAdapter, this);
         }
 
@@ -38,7 +53,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             get
             {
-                if (_vsProjectAdapter.IsDeferred)
+                if (IsDeferred)
                 {
                     return _deferredProjectServices;
                 }
@@ -51,7 +66,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             get
             {
-                if (_vsProjectAdapter.IsDeferred)
+                if (IsDeferred)
                 {
                     return _deferredProjectServices;
                 }

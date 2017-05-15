@@ -17,6 +17,8 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public Func<string> PackagesPathFactory { get; }
 
+        public NuGetProjectTypeContext NuGetProjectType { get; set;}
+
         public ProjectSystemProviderContext(
             INuGetProjectContext projectContext,
             Func<string> packagesPathFactory)
@@ -34,5 +36,13 @@ namespace NuGet.PackageManagement.VisualStudio
             ProjectContext = projectContext;
             PackagesPathFactory = packagesPathFactory;
         }
+    }
+
+    public enum NuGetProjectTypeContext
+    {
+        UnknownProject,
+        CpsPackageReferenceProject,
+        ProjectJsonProject,
+        LegacyPackageReferenceProject,
     }
 }

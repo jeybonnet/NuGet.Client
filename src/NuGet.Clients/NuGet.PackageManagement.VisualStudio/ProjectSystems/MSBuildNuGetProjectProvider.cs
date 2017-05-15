@@ -77,7 +77,8 @@ namespace NuGet.PackageManagement.VisualStudio
                     vsProjectAdapter,
                     () => CreateCoreProjectSystemServices(
                         vsProjectAdapter, projectSystem, componentModel),
-                    componentModel);
+                    componentModel,
+                    _threadingService);
             }
             else
             {

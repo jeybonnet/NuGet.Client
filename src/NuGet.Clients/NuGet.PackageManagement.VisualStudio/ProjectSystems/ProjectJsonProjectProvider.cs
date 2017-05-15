@@ -82,7 +82,7 @@ namespace NuGet.PackageManagement.VisualStudio
                         projectNameFromMSBuildPath);
                 }
 
-                if (File.Exists(projectJsonPath))
+                if (File.Exists(projectJsonPath) || context.NuGetProjectType == NuGetProjectTypeContext.ProjectJsonProject)
                 {
                     var projectServices = CreateProjectServicesAsync(vsProjectAdapter);
 
@@ -106,7 +106,8 @@ namespace NuGet.PackageManagement.VisualStudio
                 return new DeferredProjectServicesProxy(
                     vsProjectAdapter,
                     () => CreateCoreProjectSystemServices(vsProjectAdapter, componentModel),
-                    componentModel);
+                    componentModel,
+                    _threadingService);
             }
             else
             {

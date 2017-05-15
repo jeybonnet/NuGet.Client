@@ -204,6 +204,7 @@ namespace NuGet.PackageManagement.VisualStudio
                     () => PackagesFolderPathUtility.GetPackagesFolderPath(this, _settings.Value));
 
                 NuGetProject result = null;
+                context.NuGetProjectType = NuGetProjectTypeContext.LegacyPackageReferenceProject;
                 _projectSystemFactory.TryCreateNuGetProject(vsProjectAdapter, context, out result);
 
                 return result;
