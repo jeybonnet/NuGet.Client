@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Threading.Tasks;
@@ -61,7 +62,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 fullName: projectPath,
                 uniqueName: uniqueName,
                 shortName: Path.GetFileNameWithoutExtension(projectPath),
-                customUniqueName: uniqueName);
+                customUniqueName: GetCustomUniqueName(uniqueName));
 
             return new VsProjectAdapter(project, projectNames, EnsureProjectIsLoaded, _projectSystemCache, _deferredProjectWorkspaceService);
         }
@@ -96,6 +97,30 @@ namespace NuGet.PackageManagement.VisualStudio
 
                 return dteProject;
             });
+        }
+
+        // Get DTE-like customUniqueName from unique Name
+        // eg: A/A.proj -> A, foo/A/A.csproj -> foo/A
+        private string GetCustomUniqueName(string uniqueName)
+        {
+            var names = uniqueName.Split(Path.DirectorySeparatorChar);
+            var nameParts = new List<string>(names);
+
+            if (nameParts.Count == 1)
+            {
+                return nameParts[0];
+            }
+            else
+            {
+                var fileName = nameParts[nameParts.Count-1];
+                var directoryName = nameParts[nameParts.Count - 2];
+                nameParts.RemoveAt(nameParts.Count - 1);
+                nameParts.RemoveAt(nameParts.Count - 1);
+
+                nameParts.Add(Path.GetFileNameWithoutExtension(fileName));
+
+                return string.Join(Path.DirectorySeparatorChar.ToString(), nameParts);
+            }
         }
     }
 }
