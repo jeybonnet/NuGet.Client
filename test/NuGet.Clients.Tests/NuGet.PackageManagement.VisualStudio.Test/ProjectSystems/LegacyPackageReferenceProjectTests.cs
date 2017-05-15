@@ -320,10 +320,9 @@ namespace NuGet.PackageManagement.VisualStudio.Test
                 var actualRestoreSpec = packageSpecs.Single();
                 SpecValidationUtility.ValidateProjectSpec(actualRestoreSpec);
 
-                var actualDependency = actualRestoreSpec.Dependencies.Single();
+                var actualDependency = actualRestoreSpec.RestoreMetadata.TargetFrameworks.Single().ProjectReferences.Single();
                 Assert.NotNull(actualDependency);
-                Assert.Equal("packageA", actualDependency.LibraryRange.Name);
-                Assert.Equal(VersionRange.Parse("1.*"), actualDependency.LibraryRange.VersionRange);
+                Assert.Equal("TestProjectA", actualDependency.ProjectUniqueName);
 
                 // Verify
                 Mock.Get(projectServices.ItemsReader)
