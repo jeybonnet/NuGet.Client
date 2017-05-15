@@ -18,12 +18,12 @@ namespace NuGet.PackageManagement.VisualStudio
     [Export(typeof(NuGetProjectFactory))]
     internal sealed class NuGetProjectFactory
     {
-        private readonly IProjectSystemProvider[] _providers;
+        private readonly INuGetProjectProvider[] _providers;
 
         [ImportingConstructor]
         public NuGetProjectFactory(
-            [ImportMany(typeof(IProjectSystemProvider))]
-            IEnumerable<Lazy<IProjectSystemProvider, IOrderable>> providers)
+            [ImportMany(typeof(INuGetProjectProvider))]
+            IEnumerable<Lazy<INuGetProjectProvider, IOrderable>> providers)
         {
             if (providers == null)
             {

@@ -91,10 +91,8 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(VisualStudioVersion)' == '15.0'">
-    <Compile Include="LegacyCSProjProjectReference.cs" />
-    <Compile Include="LegacyCSProjPackageReference.cs" />
-    <Compile Include="ProjectSystems\LegacyCSProjPackageReferenceProject.cs" />
-    <Compile Include="ProjectSystems\LegacyCSProjPackageReferenceProjectProvider.cs" />
+    <Compile Include="ProjectSystems\LegacyPackageReferenceProject.cs" />
+    <Compile Include="ProjectSystems\LegacyPackageReferenceProjectProvider.cs" />
     <Compile Include="Migrate\ProjectJsonToPackageRefMigrator.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -134,8 +132,9 @@
     <Compile Include="IInteractiveLoginProvider.cs" />
     <Compile Include="InteractiveLoginProvider.cs" />
     <Compile Include="ProjectSystems\CpsPackageReferenceProject.cs" Condition="'$(VisualStudioVersion)' == '15.0'" />
-    <Compile Include="ProjectSystems\IProjectSystemProvider.cs" />
+    <Compile Include="ProjectSystems\INuGetProjectProvider.cs" />
     <Compile Include="ProjectSystems\MSBuildNuGetProjectProvider.cs" />
+    <Compile Include="ProjectSystems\ProjectJsonProjectProvider.cs" />
     <Compile Include="ProjectSystems\ProjectKNuGetProjectProvider.cs" />
     <Compile Include="ProjectSystems\ProjectSystemCache.cs" />
     <Compile Include="ProjectSystems\CpsPackageReferenceProjectProvider.cs" Condition="'$(VisualStudioVersion)' == '15.0'" />
@@ -143,13 +142,13 @@
     <Compile Include="Prompts\DeprecatedFrameworkModel.cs" />
     <Compile Include="Prompts\DotnetDeprecatedPrompt.cs" />
     <Compile Include="Services\NuGetLockService.cs" />
-    <Compile Include="ProjectSystems\VSMSBuildNuGetProject.cs" />
+    <Compile Include="ProjectSystems\VsMSBuildNuGetProject.cs" />
     <Compile Include="ICredentialServiceProvider.cs" />
     <Compile Include="IDE\VsCommonOperations.cs" />
     <Compile Include="IDE\VSDeleteOnRestartManager.cs" />
     <Compile Include="IDE\VSPackageRestoreManager.cs" />
     <Compile Include="IDE\VSProductUpdateService.cs" />
-    <Compile Include="ProjectSystems\ProjectJsonBuildIntegratedProjectSystem.cs" />
+    <Compile Include="ProjectSystems\VsProjectJsonNuGetProject.cs" />
     <Compile Include="SourceControl\DefaultTFSSourceControlManager.cs" />
     <Compile Include="SourceControl\VsSourceControlManagerProvider.cs" />
     <Compile Include="OptionsPageActivator.cs" />
@@ -192,7 +191,6 @@
     <Compile Include="Utility\SettingsHelper.cs" />
     <Compile Include="Utility\TaskCombinators.cs" />
     <Compile Include="Utility\VCProjectHelper.cs" />
-    <Compile Include="Utility\VSProjectRestoreReferenceUtility.cs" />
     <Compile Include="VisualStudioAccountProvider.cs" />
     <Compile Include="VisualStudioActivityLogger.cs" />
     <Compile Include="VisualStudioCredentialProvider.cs" />
@@ -200,7 +198,7 @@
     <Compile Include="VsCredentialProviderImporter.cs" />
     <Compile Include="VSMachineWideSettings.cs" />
     <Compile Include="ProjectSystems\NuGetProjectFactory.cs" />
-    <Compile Include="ProjectSystems\VSMSBuildNuGetProjectSystem.cs" />
+    <Compile Include="ProjectSystems\VsMSBuildProjectSystem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Strings.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -210,9 +208,18 @@
     <Compile Include="Utility\MicrosoftBuildEvaluationProjectUtility.cs" />
     <Compile Include="VS.ProjectSystems\VcxProject.cs" />
     <Compile Include="IDE\VSSolutionManager.cs" />
+    <Compile Include="VsProject\DefaultProjectThreadingService.cs" />
+    <Compile Include="VsProject\DeferredProjectServicesProxy.cs" />
     <Compile Include="VsProject\IVsProjectAdapterProvider.cs" />
+    <Compile Include="VsProject\IVsProjectThreadingService.cs" />
+    <Compile Include="VsProject\VsCoreProjectBuildProperties.cs" />
+    <Compile Include="VsProject\VsLangProjectBuildProperties.cs" />
+    <Compile Include="VsProject\VsLangProjectSystemService.cs" />
     <Compile Include="VsProject\VsProjectAdapter.cs" />
     <Compile Include="VsProject\VsProjectAdapterProvider.cs" />
+    <Compile Include="VsProject\VsCoreProjectSystemService.cs" />
+    <Compile Include="VsProject\WorkspaceProjectBuildProperties.cs" />
+    <Compile Include="VsProject\WorkspaceProjectServices.cs" />
     <Compile Include="VSSettings.cs" />
   </ItemGroup>
   <ItemGroup>

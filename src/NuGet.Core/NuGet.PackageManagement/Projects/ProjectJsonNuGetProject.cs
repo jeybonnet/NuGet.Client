@@ -27,27 +27,17 @@ namespace NuGet.ProjectManagement.Projects
     /// These projects contain a project.json
     /// </summary>
     [DebuggerDisplay("{ProjectName}")]
-    public class ProjectJsonBuildIntegratedNuGetProject : BuildIntegratedNuGetProject
+    public class ProjectJsonNuGetProject : BuildIntegratedNuGetProject
     {
         private readonly FileInfo _jsonConfig;
         private readonly string _projectName;
-
-        // TODO: can this be removed?
-        public ProjectJsonBuildIntegratedNuGetProject(
-            string jsonConfig,
-            string msBuildProjectPath,
-            IMSBuildNuGetProjectSystem projectSystem)
-            : this(jsonConfig, msBuildProjectPath)
-        {
-
-        }
 
         /// <summary>
         /// Project.json based project system.
         /// </summary>
         /// <param name="jsonConfig">Path to project.json.</param>
         /// <param name="msBuildProjectPath">Path to the msbuild project file.</param>
-        public ProjectJsonBuildIntegratedNuGetProject(
+        public ProjectJsonNuGetProject(
             string jsonConfig,
             string msBuildProjectPath)
         {
@@ -64,6 +54,7 @@ namespace NuGet.ProjectManagement.Projects
             _jsonConfig = new FileInfo(jsonConfig);
 
             MSBuildProjectPath = msBuildProjectPath;
+            ProjectStyle = ProjectStyle.ProjectJson;
 
             _projectName = Path.GetFileNameWithoutExtension(msBuildProjectPath);
 
@@ -74,7 +65,7 @@ namespace NuGet.ProjectManagement.Projects
             }
 
             JObject projectJson;
-            IEnumerable<NuGetFramework> targetFrameworks = Enumerable.Empty<NuGetFramework>();
+            var targetFrameworks = Enumerable.Empty<NuGetFramework>();
 
             try
             {
@@ -130,13 +121,7 @@ namespace NuGet.ProjectManagement.Projects
         /// <summary>
         /// Parsed project.json file
         /// </summary>
-        public PackageSpec JsonPackageSpec
-        {
-            get
-            {
-                return JsonPackageSpecReader.GetPackageSpec(ProjectName, JsonConfigPath);
-            }
-        }
+        private PackageSpec JsonPackageSpec => JsonPackageSpecReader.GetPackageSpec(ProjectName, JsonConfigPath);
 
         public override string MSBuildProjectPath { get; }
         /// <summary>
@@ -160,13 +145,6 @@ namespace NuGet.ProjectManagement.Projects
             bool throwOnFailure)
         {
             return Task.FromResult(false);
-        }
-
-        public virtual Task<IReadOnlyList<ProjectRestoreReference>> GetDirectProjectReferencesAsync(
-            DependencyGraphCacheContext context)
-        {
-            return Task.FromResult<IReadOnlyList<ProjectRestoreReference>>(
-                Enumerable.Empty<ProjectRestoreReference>().ToList());
         }
 
         public override async Task<IEnumerable<PackageReference>> GetInstalledPackagesAsync(CancellationToken token)
@@ -211,7 +189,10 @@ namespace NuGet.ProjectManagement.Projects
                 metadata.ProjectName = packageSpec.Name;
                 metadata.ProjectUniqueName = MSBuildProjectPath;
 
-                var references = await GetDirectProjectReferencesAsync(context);
+                var references = (await ProjectServices
+                    .ItemsReader
+                    .GetProjectReferencesAsync(context.Logger))
+                    .ToList();
                 if (references != null && references.Count > 0)
                 {
                     // Add msbuild reference groups for each TFM in the project
@@ -277,6 +258,7 @@ namespace NuGet.ProjectManagement.Projects
         {
             return await RemoveDependencyAsync(packageIdentity.Id, nuGetProjectContext, token);
         }
+
         private JObject GetJson()
         {
             try
@@ -308,6 +290,7 @@ namespace NuGet.ProjectManagement.Projects
                     string.Format(Strings.ErrorLoadingPackagesConfig, _jsonConfig.FullName, ex.Message), ex);
             }
         }
+
         private async Task SaveJsonAsync(JObject json)
         {
             using (var writer = new StreamWriter(_jsonConfig.FullName, false, Encoding.UTF8))

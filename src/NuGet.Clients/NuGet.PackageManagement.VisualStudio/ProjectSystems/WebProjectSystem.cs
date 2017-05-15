@@ -8,7 +8,7 @@ using NuGet.VisualStudio;
 
 namespace NuGet.PackageManagement.VisualStudio
 {
-    public class WebProjectSystem : VSMSBuildNuGetProjectSystem
+    public class WebProjectSystem : VsMSBuildProjectSystem
     {
         public WebProjectSystem(IVsProjectAdapter vsProjectAdapter, INuGetProjectContext nuGetProjectContext)
             : base(vsProjectAdapter, nuGetProjectContext)
@@ -17,7 +17,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public override bool IsSupportedFile(string path)
         {
-            string fileName = Path.GetFileName(path);
+            var fileName = Path.GetFileName(path);
             return !(fileName.StartsWith("app.", StringComparison.OrdinalIgnoreCase) &&
                      fileName.EndsWith(".config", StringComparison.OrdinalIgnoreCase));
         }

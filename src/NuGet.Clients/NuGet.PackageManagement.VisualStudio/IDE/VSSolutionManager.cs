@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using EnvDTE;
 using EnvDTE80;
+using Microsoft;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -44,6 +45,7 @@ namespace NuGet.PackageManagement.VisualStudio
         private readonly ICredentialServiceProvider _credentialServiceProvider;
         private readonly IVsProjectAdapterProvider _vsProjectAdapterProvider;
         private readonly Common.ILogger _logger;
+        private readonly Lazy<ISettings> _settings;
 
         private bool _initialized;
         private bool _cacheInitialized;
@@ -74,6 +76,8 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public string DefaultNuGetProjectName { get; set; }
 
+        #region Events
+
         public event EventHandler<NuGetProjectEventArgs> NuGetProjectAdded;
 
         public event EventHandler<NuGetProjectEventArgs> NuGetProjectRemoved;
@@ -96,6 +100,8 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public event EventHandler<ActionsExecutedEventArgs> ActionsExecuted;
 
+        #endregion Events
+
         [ImportingConstructor]
         internal VSSolutionManager(
             [Import(typeof(SVsServiceProvider))]
@@ -105,30 +111,15 @@ namespace NuGet.PackageManagement.VisualStudio
             ICredentialServiceProvider credentialServiceProvider,
             IVsProjectAdapterProvider vsProjectAdapterProvider,
             [Import("VisualStudioActivityLogger")]
-            Common.ILogger logger)
+            Common.ILogger logger,
+            Lazy<ISettings> settings)
         {
-            if (serviceProvider == null)
-            {
-                throw new ArgumentNullException(nameof(serviceProvider));
-            }
-
-            if (projectSystemCache == null)
-            {
-                throw new ArgumentNullException(nameof(projectSystemCache));
-            }
-
-            if (projectSystemFactory == null)
-            {
-                throw new ArgumentNullException(nameof(projectSystemFactory));
-            }
-            if (credentialServiceProvider == null)
-            {
-                throw new ArgumentNullException(nameof(credentialServiceProvider));
-            }
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger));
-            }
+            Assumes.Present(serviceProvider);
+            Assumes.Present(projectSystemCache);
+            Assumes.Present(projectSystemFactory);
+            Assumes.Present(credentialServiceProvider);
+            Assumes.Present(logger);
+            Assumes.Present(settings);
 
             _serviceProvider = serviceProvider;
             _projectSystemCache = projectSystemCache;
@@ -136,6 +127,7 @@ namespace NuGet.PackageManagement.VisualStudio
             _credentialServiceProvider = credentialServiceProvider;
             _vsProjectAdapterProvider = vsProjectAdapterProvider;
             _logger = logger;
+            _settings = settings;
         }
 
         private async Task InitializeAsync()
@@ -207,15 +199,14 @@ namespace NuGet.PackageManagement.VisualStudio
             {
                 await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                var settings = ServiceLocator.GetInstance<ISettings>();
-
                 var context = new ProjectSystemProviderContext(
                     EmptyNuGetProjectContext,
-                    () => PackagesFolderPathUtility.GetPackagesFolderPath(this, settings));
+                    () => PackagesFolderPathUtility.GetPackagesFolderPath(this, _settings.Value));
 
-                return new LegacyCSProjPackageReferenceProject(
-                    vsProjectAdapter,
-                    vsProjectAdapter.ProjectId);
+                NuGetProject result = null;
+                _projectSystemFactory.TryCreateNuGetProject(vsProjectAdapter, context, out result);
+
+                return result;
             });
 
             var added = _projectSystemCache.AddProject(oldProjectName, vsProjectAdapter, nuGetProject);
@@ -223,12 +214,9 @@ namespace NuGet.PackageManagement.VisualStudio
             if (DefaultNuGetProjectName == null)
             {
                 DefaultNuGetProjectName = projectName;
-            } 
-
-            if (NuGetProjectUpdated != null)
-            {
-                NuGetProjectUpdated(this, new NuGetProjectEventArgs(nuGetProject));
             }
+
+            NuGetProjectUpdated?.Invoke(this, new NuGetProjectEventArgs(nuGetProject));
 
             return nuGetProject;
 #endif
@@ -297,16 +285,6 @@ namespace NuGet.PackageManagement.VisualStudio
             var projects = _projectSystemCache.GetNuGetProjects();
 
             return projects;
-        }
-
-        public void SaveProject(NuGetProject nuGetProject)
-        {
-            NuGetUIThreadHelper.JoinableTaskFactory.Run(async delegate
-            {
-                await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                var safeName = GetNuGetProjectSafeName(nuGetProject);
-                GetVsProjectAdapter(safeName)?.Save();
-            });
         }
 
         public IEnumerable<IVsProjectAdapter> GetAllVsProjectAdapters()
@@ -1013,13 +991,14 @@ namespace NuGet.PackageManagement.VisualStudio
             var dependentProjectsDictionary = new Dictionary<string, List<IVsProjectAdapter>>();
             var vsProjectAdapters = GetAllVsProjectAdapters();
 
-            foreach (var vsProjectAdapter in vsProjectAdapters)
+            foreach (var vsProjectAdapter in vsProjectAdapters.Where(p => p.SupportsReference))
             {
-                if (vsProjectAdapter.SupportsReference)
+                foreach (var projectProjectPath in vsProjectAdapter.GetReferencedProjects())
                 {
-                    foreach (var referencedProject in vsProjectAdapter.GetReferencedProjects())
+                    var result = _projectSystemCache.TryGetVsProjectAdapter(projectProjectPath, out IVsProjectAdapter vsReferencedProject);
+                    if (result)
                     {
-                        AddDependentProject(dependentProjectsDictionary, referencedProject, vsProjectAdapter);
+                        AddDependentProject(dependentProjectsDictionary, vsProjectAdapter, vsReferencedProject);
                     }
                 }
             }

@@ -4,18 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.Remoting.Metadata.W3cXsd2001;
-using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using NuGet.ProjectManagement;
 using NuGet.VisualStudio;
-using EnvDTEProject = EnvDTE.Project;
 using Task = System.Threading.Tasks.Task;
 
 namespace NuGet.PackageManagement.VisualStudio
@@ -156,7 +150,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 var msBuildNuGetProject = nuGetProject as MSBuildNuGetProject;
                 if (msBuildNuGetProject != null)
                 {
-                    return msBuildNuGetProject.MSBuildNuGetProjectSystem;
+                    return msBuildNuGetProject.ProjectSystem;
                 }
             }
             return null;

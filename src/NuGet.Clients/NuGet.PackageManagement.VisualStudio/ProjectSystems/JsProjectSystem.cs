@@ -52,7 +52,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 {
                     await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                    await VsProjectAdapter.GetProjectItemsAsync(Path.GetDirectoryName(path), createIfNotExists: true);
+                    await GetProjectItemsAsync(Path.GetDirectoryName(path), createIfNotExists: true);
                     base.AddFile(path, stream);
                 });
         }
@@ -69,7 +69,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 {
                     await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                    await VsProjectAdapter.GetProjectItemsAsync(Path.GetDirectoryName(path), createIfNotExists: true);
+                    await GetProjectItemsAsync(Path.GetDirectoryName(path), createIfNotExists: true);
                     base.AddFile(path, writeToStream);
                 });
         }
@@ -83,21 +83,21 @@ namespace NuGet.PackageManagement.VisualStudio
                 return;
             }
 
-            string folderPath = Path.GetDirectoryName(path);
-            string fullPath = FileSystemUtility.GetFullPath(ProjectFullPath, path);
+            var folderPath = Path.GetDirectoryName(path);
+            var fullPath = FileSystemUtility.GetFullPath(ProjectFullPath, path);
 
             // Add the file to project or folder
-            EnvDTEProjectItems container = await VsProjectAdapter.GetProjectItemsAsync(folderPath, createIfNotExists: true);
+            var container = await GetProjectItemsAsync(folderPath, createIfNotExists: true);
             if (container == null)
             {
                 throw new ArgumentException(
-                    String.Format(
+                    string.Format(
                         CultureInfo.CurrentCulture,
                         Strings.Error_FailedToCreateParentFolder,
                         path,
                         ProjectName));
             }
-            AddFileToContainer(fullPath, folderPath, container);
+            container.AddFromFileCopy(fullPath);
 
             NuGetProjectContext.Log(ProjectManagement.MessageLevel.Debug, Strings.Debug_AddedFileToProject, path, ProjectName);
         }

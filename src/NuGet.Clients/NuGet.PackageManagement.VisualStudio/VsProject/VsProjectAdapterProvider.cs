@@ -11,6 +11,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
+using NuGet.ProjectManagement;
 using NuGet.VisualStudio;
 
 namespace NuGet.PackageManagement.VisualStudio
@@ -18,9 +19,8 @@ namespace NuGet.PackageManagement.VisualStudio
     [Export(typeof(IVsProjectAdapterProvider))]
     internal class VsProjectAdapterProvider : IVsProjectAdapterProvider
     {
-        private readonly IServiceProvider _serviceProvider;
-        private readonly IDeferredProjectWorkspaceService _deferredProjectWorkspaceService;
-        private readonly IProjectSystemCache _projectSystemCache;
+        private readonly IDeferredProjectWorkspaceService _workspaceService;
+        private readonly IVsProjectThreadingService _threadingService;
 
         private readonly Lazy<IVsSolution> _vsSolution;
 
@@ -28,72 +28,115 @@ namespace NuGet.PackageManagement.VisualStudio
         public VsProjectAdapterProvider(
             [Import(typeof(SVsServiceProvider))]
             IServiceProvider serviceProvider,
-            IDeferredProjectWorkspaceService deferredProjectWorkspaceService,
-            IProjectSystemCache projectSystemCache)
+            IDeferredProjectWorkspaceService workspaceService,
+            IVsProjectThreadingService threadingService)
         {
             Assumes.Present(serviceProvider);
-            Assumes.Present(deferredProjectWorkspaceService);
+            Assumes.Present(workspaceService);
+            Assumes.Present(threadingService);
 
-            _serviceProvider = serviceProvider;
-            _deferredProjectWorkspaceService = deferredProjectWorkspaceService;
-            _projectSystemCache = projectSystemCache;
-            _vsSolution = new Lazy<IVsSolution>(() => _serviceProvider.GetService<SVsSolution, IVsSolution>());
+            _workspaceService = workspaceService;
+            _threadingService = threadingService;
+
+            _vsSolution = new Lazy<IVsSolution>(() => serviceProvider.GetService<SVsSolution, IVsSolution>());
         }
 
         public IVsProjectAdapter CreateVsProject(EnvDTE.Project dteProject)
         {
             Assumes.Present(dteProject);
 
-            return new VsProjectAdapter(dteProject, _projectSystemCache);
+            _threadingService.VerifyOnUIThread();
+
+            var vsHierarchyItem = VsHierarchyItem.FromDteProject(dteProject);
+            Func<IVsHierarchy, EnvDTE.Project> loadDteProject = _ => dteProject;
+
+            IProjectBuildProperties vsBuildProperties;
+            if (vsHierarchyItem.VsHierarchy is IVsBuildPropertyStorage)
+            {
+                vsBuildProperties = new VsLangProjectBuildProperties(
+                    vsHierarchyItem.VsHierarchy as IVsBuildPropertyStorage, _threadingService);
+            }
+            else
+            {
+                vsBuildProperties = new VsCoreProjectBuildProperties(dteProject, _threadingService);
+            }
+
+            var projectNames = ProjectNames.FromDTEProject(dteProject);
+            var fullProjectPath = EnvDTEProjectInfoUtility.GetFullProjectPath(dteProject);
+            return new VsProjectAdapter(
+                vsHierarchyItem,
+                projectNames,
+                fullProjectPath,
+                loadDteProject,
+                vsBuildProperties,
+                _threadingService);
         }
 
         public async Task<IVsProjectAdapter> CreateVsProjectAsync(IVsHierarchy project)
         {
             Assumes.Present(project);
 
-            await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _threadingService.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            var projectPath = VsHierarchyUtility.GetProjectPath(project);
+            var vsHierarchyItem = VsHierarchyItem.FromVsHierarchy(project);
+            var fullProjectPath = VsHierarchyUtility.GetProjectPath(project);
 
             var uniqueName = string.Empty;
             _vsSolution.Value.GetUniqueNameOfProject(project, out uniqueName);
 
             var projectNames = new ProjectNames(
-                fullName: projectPath,
+                fullName: fullProjectPath,
                 uniqueName: uniqueName,
-                shortName: Path.GetFileNameWithoutExtension(projectPath),
+                shortName: Path.GetFileNameWithoutExtension(fullProjectPath),
                 customUniqueName: GetCustomUniqueName(uniqueName));
 
-            return new VsProjectAdapter(project, projectNames, EnsureProjectIsLoaded, _projectSystemCache, _deferredProjectWorkspaceService);
+            var workspaceBuildProperties = new WorkspaceProjectBuildProperties(
+                fullProjectPath, _workspaceService, _threadingService);
+
+            return new VsProjectAdapter(
+                vsHierarchyItem,
+                projectNames, 
+                fullProjectPath,
+                EnsureProjectIsLoaded,
+                workspaceBuildProperties,
+                _threadingService,
+                _workspaceService);
         }
 
         public EnvDTE.Project EnsureProjectIsLoaded(IVsHierarchy project)
         {
-            return NuGetUIThreadHelper.JoinableTaskFactory.Run(async () =>
+            return _threadingService.ExecuteSynchronously(async () =>
             {
-                await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                await _threadingService.JoinableTaskFactory.SwitchToMainThreadAsync();
 
                 // 1. Ask the solution to load the required project. To reduce wait time,
                 //    we load only the project we need, not the entire solution.
-                var hr = project.GetGuidProperty((uint)VSConstants.VSITEMID.Root, (int)__VSHPROPID.VSHPROPID_ProjectIDGuid, out Guid projectGuid);
-                ErrorHandler.ThrowOnFailure(hr);
+                ErrorHandler.ThrowOnFailure(project.GetGuidProperty(
+                    (uint)VSConstants.VSITEMID.Root, 
+                    (int)__VSHPROPID.VSHPROPID_ProjectIDGuid, 
+                    out Guid projectGuid));
 
                 var asVsSolution4 = _vsSolution.Value as IVsSolution4;
                 Assumes.Present(asVsSolution4);
-                hr = asVsSolution4.EnsureProjectIsLoaded(projectGuid, (uint)__VSBSLFLAGS.VSBSLFLAGS_None);
-                ErrorHandler.ThrowOnFailure(hr);
+
+                ErrorHandler.ThrowOnFailure(asVsSolution4.EnsureProjectIsLoaded(
+                    projectGuid, 
+                    (uint)__VSBSLFLAGS.VSBSLFLAGS_None));
 
                 // 2. After the project is loaded, grab the latest IVsHierarchy object.
-                hr = _vsSolution.Value.GetProjectOfGuid(projectGuid, out IVsHierarchy loadedProject);
-                ErrorHandler.ThrowOnFailure(hr);
-
+                ErrorHandler.ThrowOnFailure(_vsSolution.Value.GetProjectOfGuid(
+                    projectGuid, 
+                    out IVsHierarchy loadedProject));
                 Assumes.Present(loadedProject);
 
                 object extObject = null;
-                hr = loadedProject.GetProperty((uint)VSConstants.VSITEMID.Root, (int)__VSHPROPID.VSHPROPID_ExtObject, out extObject);
-                ErrorHandler.ThrowOnFailure(hr);
+                ErrorHandler.ThrowOnFailure(loadedProject.GetProperty(
+                    (uint)VSConstants.VSITEMID.Root, 
+                    (int)__VSHPROPID.VSHPROPID_ExtObject, 
+                    out extObject));
 
                 var dteProject = extObject as EnvDTE.Project;
+                Assumes.Present(dteProject);
 
                 return dteProject;
             });

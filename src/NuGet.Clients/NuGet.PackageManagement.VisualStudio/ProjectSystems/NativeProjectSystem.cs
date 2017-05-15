@@ -1,25 +1,25 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
 using System.IO;
+using System.Threading.Tasks;
 using NuGet.ProjectManagement;
 using NuGet.VisualStudio;
-using EnvDTEProject = EnvDTE.Project;
 using Task = System.Threading.Tasks.Task;
 
 namespace NuGet.PackageManagement.VisualStudio
 {
-    public class NativeProjectSystem : CpsProjectSystem
+    internal class NativeProjectSystem : CpsProjectSystem
     {
         public NativeProjectSystem(IVsProjectAdapter vsProjectAdapter, INuGetProjectContext nuGetProjectContext)
             : base(vsProjectAdapter, nuGetProjectContext)
         {
         }
 
-        public override void AddReference(string referencePath)
+        public override Task AddReferenceAsync(string referencePath)
         {
             // We disable assembly reference for native projects
+            return Task.CompletedTask;
         }
 
         protected override async Task AddFileToProjectAsync(string path)
@@ -39,15 +39,16 @@ namespace NuGet.PackageManagement.VisualStudio
             NuGetProjectContext.Log(ProjectManagement.MessageLevel.Debug, Strings.Debug_AddedFileToProject, path, ProjectName);
         }
 
-        public override bool ReferenceExists(string name)
+        public override Task<bool> ReferenceExistsAsync(string name)
         {
             // We disable assembly reference for native projects
-            return true;
+            return Task.FromResult(true);
         }
 
-        public override void RemoveReference(string name)
+        public override Task RemoveReferenceAsync(string name)
         {
             // We disable assembly reference for native projects
+            return Task.CompletedTask;
         }
 
         public override void RemoveFile(string path)

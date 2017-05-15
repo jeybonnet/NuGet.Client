@@ -4,9 +4,12 @@
 using System;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
-using EnvDTE;
+using Microsoft;
 using NuGet.PackageManagement.VisualStudio;
+using NuGet.ProjectManagement;
+using NuGet.ProjectManagement.Projects;
 using NuGet.VisualStudio.Implementation.Resources;
 
 namespace NuGet.VisualStudio
@@ -15,16 +18,21 @@ namespace NuGet.VisualStudio
     internal class VsProjectJsonToPackageReferenceMigrator : IVsProjectJsonToPackageReferenceMigrator
     {
         private readonly Lazy<IVsSolutionManager> _solutionManager;
+        private readonly Lazy<INuGetProjectProvider> _projectProvider;
 
         [ImportingConstructor]
-        public VsProjectJsonToPackageReferenceMigrator(Lazy<IVsSolutionManager> solutionManager)
+        public VsProjectJsonToPackageReferenceMigrator(
+            Lazy<IVsSolutionManager> solutionManager,
+            [Import(typeof(LegacyPackageReferenceProjectProvider))]
+            Lazy<INuGetProjectProvider> projectProvider)
         {
+            Assumes.Present(solutionManager);
+            Assumes.Present(projectProvider);
+
             _solutionManager = solutionManager;
-            if (solutionManager == null)
-            {
-                throw new ArgumentNullException(nameof(solutionManager));
-            }
+            _projectProvider = projectProvider;
         }
+
         public Task<object> MigrateProjectJsonToPackageReferenceAsync(string projectUniqueName)
         {
             if (string.IsNullOrEmpty(projectUniqueName))
@@ -55,24 +63,25 @@ namespace NuGet.VisualStudio
             var nuGetProject = _solutionManager.Value.GetNuGetProject(projectSafeName);
 
             // If the project already has PackageReference, do nothing.
-            if (nuGetProject is LegacyCSProjPackageReferenceProject)
+            if (nuGetProject is LegacyPackageReferenceProject)
             {
                 return new VsProjectJsonToPackageReferenceMigrateResult(success: true, errorMessage: null);
             }
 
             try
             {
-                _solutionManager.Value.SaveProject(nuGetProject);
-                
-                var legacyPackageRefBasedProject = new LegacyCSProjPackageReferenceProject(
-                    project,
-                    project.ProjectId);
+                await nuGetProject.SaveAsync(CancellationToken.None);
+
+                NuGetProject legacyPackageRefBasedProject;
+
+                _projectProvider.Value.TryCreateNuGetProject(
+                    project, null, out legacyPackageRefBasedProject);
+                Assumes.Present(legacyPackageRefBasedProject);
                 
                 await ProjectJsonToPackageRefMigrator.MigrateAsync(
-                    legacyPackageRefBasedProject,
-                    legacyPackageRefBasedProject.MSBuildProjectPath);
+                    legacyPackageRefBasedProject as BuildIntegratedNuGetProject);
                 var result = new VsProjectJsonToPackageReferenceMigrateResult(success: true, errorMessage: null);
-                _solutionManager.Value.SaveProject(nuGetProject);
+                await nuGetProject.SaveAsync(CancellationToken.None);
                 await _solutionManager.Value.UpdateNuGetProjectToPackageRef(nuGetProject);
 
                 return result;

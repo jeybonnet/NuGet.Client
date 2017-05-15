@@ -191,7 +191,7 @@ namespace NuGet.VisualStudio
 
             try
             {
-                EnvDTE.Property property = envDTEProject.Properties.Item(propertyName);
+                var property = envDTEProject.Properties.Item(propertyName);
                 if (property != null)
                 {
                     return (T)property.Value;
@@ -373,8 +373,8 @@ namespace NuGet.VisualStudio
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            string targetFrameworkMoniker = GetTargetFrameworkString(envDTEProject);
-            if (!String.IsNullOrEmpty(targetFrameworkMoniker))
+            var targetFrameworkMoniker = GetTargetFrameworkString(envDTEProject);
+            if (!string.IsNullOrEmpty(targetFrameworkMoniker))
             {
                 return new FrameworkName(targetFrameworkMoniker);
             }
