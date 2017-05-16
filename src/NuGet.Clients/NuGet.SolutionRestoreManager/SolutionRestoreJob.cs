@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using NuGet.Commands;
@@ -38,7 +39,6 @@ namespace NuGet.SolutionRestoreManager
         private readonly IVsSolutionManager _solutionManager;
         private readonly ISourceRepositoryProvider _sourceRepositoryProvider;
         private readonly ISettings _settings;
-        private readonly IDeferredProjectWorkspaceService _deferredWorkspaceService;
         private readonly IRestoreEventsPublisher _restoreEventsPublisher;
 
         private RestoreOperationLogger _logger;
@@ -60,40 +60,14 @@ namespace NuGet.SolutionRestoreManager
             IVsSolutionManager solutionManager,
             ISourceRepositoryProvider sourceRepositoryProvider,
             IRestoreEventsPublisher restoreEventsPublisher,
-#if !VS14
-            IDeferredProjectWorkspaceService deferredWorkspaceService,
-#endif
             ISettings settings)
         {
-            if (serviceProvider == null)
-            {
-                throw new ArgumentNullException(nameof(serviceProvider));
-            }
-
-            if (packageRestoreManager == null)
-            {
-                throw new ArgumentNullException(nameof(packageRestoreManager));
-            }
-
-            if (solutionManager == null)
-            {
-                throw new ArgumentNullException(nameof(solutionManager));
-            }
-
-            if (sourceRepositoryProvider == null)
-            {
-                throw new ArgumentNullException(nameof(sourceRepositoryProvider));
-            }
-
-            if (restoreEventsPublisher == null)
-            {
-                throw new ArgumentNullException(nameof(restoreEventsPublisher));
-            }
-
-            if (settings == null)
-            {
-                throw new ArgumentNullException(nameof(settings));
-            }
+            Assumes.Present(serviceProvider);
+            Assumes.Present(packageRestoreManager);
+            Assumes.Present(solutionManager);
+            Assumes.Present(sourceRepositoryProvider);
+            Assumes.Present(restoreEventsPublisher);
+            Assumes.Present(settings);
 
             _serviceProvider = serviceProvider;
             _packageRestoreManager = packageRestoreManager;
@@ -101,11 +75,6 @@ namespace NuGet.SolutionRestoreManager
             _sourceRepositoryProvider = sourceRepositoryProvider;
             _restoreEventsPublisher = restoreEventsPublisher;
             _settings = settings;
-#if VS14
-            _deferredWorkspaceService = null;
-#else
-            _deferredWorkspaceService = deferredWorkspaceService;
-#endif
         }
 
         /// <summary>
