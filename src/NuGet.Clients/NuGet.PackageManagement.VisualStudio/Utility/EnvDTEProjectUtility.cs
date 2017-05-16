@@ -406,7 +406,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 return true;
             }
 
-            return envDTEProject.Kind != null && ProjectTypesConstants.SupportedProjectTypes.Contains(envDTEProject.Kind) && !HasUnsupportedProjectCapability(envDTEProject);
+            return envDTEProject.Kind != null && SupportedProjectTypes.IsSupported(envDTEProject.Kind) && !HasUnsupportedProjectCapability(envDTEProject);
         }
 
         private static bool IsProjectCapabilityCompliant(EnvDTE.Project envDTEProject)
@@ -640,7 +640,7 @@ namespace NuGet.PackageManagement.VisualStudio
             Debug.Assert(ThreadHelper.CheckAccess());
 
             var envDTEProjects = new List<EnvDTE.Project>();
-            AssemblyReferences references = GetAssemblyReferences(envDTEProject);
+            var references = GetAssemblyReferences(envDTEProject);
             foreach (AssemblyReference reference in references)
             {
                 if (reference.ReferencedProject != null)
@@ -659,7 +659,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            return envDTEProject.Kind == null || ProjectTypesConstants.UnsupportedProjectTypes.Contains(envDTEProject.Kind);
+            return envDTEProject.Kind == null || SupportedProjectTypes.IsUnsupported(envDTEProject.Kind);
         }
 
         public static bool IsParentProjectExplicitlyUnsupported(EnvDTE.Project envDTEProject)
@@ -724,22 +724,6 @@ namespace NuGet.PackageManagement.VisualStudio
 
                 return retValue as INuGetPackageManager;
             }
-        }
-
-        public static bool SupportsBindingRedirects(EnvDTE.Project envDTEProject)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-            return (envDTEProject.Kind != null & !ProjectTypesConstants.UnsupportedProjectTypesForBindingRedirects.Contains(envDTEProject.Kind, StringComparer.OrdinalIgnoreCase)) &&
-                   !EnvDTEProjectInfoUtility.IsWindowsStoreApp(envDTEProject);
-        }
-
-        public static bool SupportsReferences(EnvDTE.Project envDTEProject)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-            return envDTEProject.Kind != null &&
-                   !ProjectTypesConstants.UnsupportedProjectTypesForAddingReferences.Contains(envDTEProject.Kind, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>

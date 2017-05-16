@@ -236,15 +236,26 @@ namespace NuGet.PackageManagement.VisualStudio
             }
         }
 
-        public IEnumerable<string> GetReferencedProjects()
+        public async Task<IEnumerable<string>> GetReferencedProjectsAsync()
         {
             if (!IsDeferred)
             {
-                return EnvDTEProjectUtility.GetReferencedProjects(Project).Select(p => p.UniqueName);
+                if (Project.Kind != null
+                    && SupportedProjectTypes.IsSupportedForAddingReferences(Project.Kind))
+                {
+                    return EnvDTEProjectUtility.GetReferencedProjects(Project).Select(p => p.UniqueName);
+                }
+
+                return Enumerable.Empty<string>();
             }
             else
             {
-                return _threadingService.ExecuteSynchronously(() => _workspaceService.GetProjectReferencesAsync(FullProjectPath));
+                if (ProjectTypeGuids.All(SupportedProjectTypes.IsSupportedForAddingReferences))
+                {
+                    return await _workspaceService.GetProjectReferencesAsync(FullProjectPath);
+                }
+
+                return Enumerable.Empty<string>();
             }
         }
 
@@ -320,7 +331,8 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             get
             {
-                return EnvDTEProjectUtility.SupportsBindingRedirects(Project);
+                return (Project.Kind != null && SupportedProjectTypes.IsSupportedForBindingRedirects(Project.Kind)) 
+                    && !EnvDTEProjectInfoUtility.IsWindowsStoreApp(Project);
             }
         }
 
@@ -329,21 +341,6 @@ namespace NuGet.PackageManagement.VisualStudio
             get
             {
                 return !IsDeferred && EnvDTEProjectUtility.SupportsProjectSystemService(Project);
-            }
-        }
-
-        public bool SupportsReference
-        {
-            get
-            {
-                if (!IsDeferred)
-                {
-                    return EnvDTEProjectUtility.SupportsReferences(Project);
-                }
-                else
-                {
-                    return !ProjectTypeGuids.Any(p => ProjectTypesConstants.UnsupportedProjectTypesForAddingReferences.Contains(p));
-                }
             }
         }
 

@@ -992,9 +992,10 @@ namespace NuGet.PackageManagement.VisualStudio
             var dependentProjectsDictionary = new Dictionary<string, List<IVsProjectAdapter>>();
             var vsProjectAdapters = GetAllVsProjectAdapters();
 
-            foreach (var vsProjectAdapter in vsProjectAdapters.Where(p => p.SupportsReference))
+            foreach (var vsProjectAdapter in vsProjectAdapters)
             {
-                foreach (var projectProjectPath in vsProjectAdapter.GetReferencedProjects())
+                var referencedProjects = await vsProjectAdapter.GetReferencedProjectsAsync();
+                foreach (var projectProjectPath in referencedProjects)
                 {
                     var result = _projectSystemCache.TryGetVsProjectAdapter(projectProjectPath, out IVsProjectAdapter vsReferencedProject);
                     if (result)

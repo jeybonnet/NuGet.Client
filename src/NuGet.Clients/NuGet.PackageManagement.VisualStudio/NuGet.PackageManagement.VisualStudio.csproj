@@ -104,7 +104,7 @@
     <Compile Include="Common\PackageCollectionExtensions.cs" />
     <Compile Include="Common\PackageCollectionItem.cs" />
     <Compile Include="Common\PackageCollectionItemExtensions.cs" />
-    <Compile Include="Common\ProjectTypesConstant.cs" />
+    <Compile Include="Common\SupportedProjectTypes.cs" />
     <Compile Include="Common\VersionCollectionExtensions.cs" />
     <Compile Include="DefaultVSCredentialServiceProvider.cs" />
     <Compile Include="Handlers\ProjectRetargetingHandler.cs" />
@@ -214,7 +214,7 @@
     <Compile Include="VsProject\IVsProjectThreadingService.cs" />
     <Compile Include="VsProject\VsCoreProjectBuildProperties.cs" />
     <Compile Include="VsProject\VsLangProjectBuildProperties.cs" />
-    <Compile Include="VsProject\VsLangProjectSystemService.cs" />
+    <Compile Include="VsProject\VsLangProjectSystemService.cs" Condition="'$(VisualStudioVersion)' == '15.0'" />
     <Compile Include="VsProject\VsProjectAdapter.cs" />
     <Compile Include="VsProject\VsProjectAdapterProvider.cs" />
     <Compile Include="VsProject\VsCoreProjectSystemService.cs" />

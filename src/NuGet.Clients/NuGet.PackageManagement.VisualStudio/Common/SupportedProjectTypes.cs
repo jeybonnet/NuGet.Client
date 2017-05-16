@@ -3,13 +3,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NuGet.VisualStudio;
 
 namespace NuGet.PackageManagement.VisualStudio
 {
-    internal static class ProjectTypesConstants
+    internal static class SupportedProjectTypes
     {
-        public static readonly HashSet<string> SupportedProjectTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        private static readonly HashSet<string> _supportedProjectTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
                 VsProjectTypes.WebSiteProjectTypeGuid,
                 VsProjectTypes.CsharpProjectTypeGuid,
@@ -28,14 +29,14 @@ namespace NuGet.PackageManagement.VisualStudio
                 VsProjectTypes.ManagementPackProjectTypeGuid,
             };
 
-        public static readonly HashSet<string> UnsupportedProjectTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        private static readonly HashSet<string> _unsupportedProjectTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
                 VsProjectTypes.LightSwitchProjectTypeGuid,
                 VsProjectTypes.InstallShieldLimitedEditionTypeGuid,
             };
 
         // List of project types that cannot have binding redirects added
-        public static readonly string[] UnsupportedProjectTypesForBindingRedirects =
+        private static readonly string[] _unsupportedProjectTypesForBindingRedirects =
             {
                 VsProjectTypes.WixProjectTypeGuid,
                 VsProjectTypes.JsProjectTypeGuid,
@@ -48,10 +49,30 @@ namespace NuGet.PackageManagement.VisualStudio
             };
 
         // List of project types that cannot have references added to them
-        public static readonly string[] UnsupportedProjectTypesForAddingReferences =
+        private static readonly string[] _unsupportedProjectTypesForAddingReferences =
             {
                 VsProjectTypes.WixProjectTypeGuid,
                 VsProjectTypes.CppProjectTypeGuid,
             };
+
+        public static bool IsSupported(string projectKind)
+        {
+            return _supportedProjectTypes.Contains(projectKind);
+        }
+
+        public static bool IsUnsupported(string projectKind)
+        {
+            return _unsupportedProjectTypes.Contains(projectKind);
+        }
+
+        public static bool IsSupportedForBindingRedirects(string projectKind)
+        {
+            return !_unsupportedProjectTypesForBindingRedirects.Contains(projectKind, StringComparer.OrdinalIgnoreCase);
+        }
+
+        public static bool IsSupportedForAddingReferences(string projectKind)
+        {
+            return !_unsupportedProjectTypesForAddingReferences.Contains(projectKind, StringComparer.OrdinalIgnoreCase);
+        }
     }
 }

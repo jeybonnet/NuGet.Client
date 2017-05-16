@@ -58,8 +58,6 @@ namespace NuGet.VisualStudio
 
         bool SupportsProjectSystemService { get; }
 
-        bool SupportsReference { get; }
-
         string UniqueName { get; }
 
         /// <summary>
@@ -71,7 +69,7 @@ namespace NuGet.VisualStudio
 
         Task<bool> EntityExists(string filePath);
 
-        IEnumerable<string> GetReferencedProjects();
+        Task<IEnumerable<string>> GetReferencedProjectsAsync();
 
         /// <summary>
         /// Project's runtime identifiers. Should never be null but can be an empty sequence.

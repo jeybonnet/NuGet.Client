@@ -850,7 +850,24 @@ namespace NuGetConsole.Host.PowerShell.Implementation
             var safeName = solutionManager.GetNuGetProjectSafeName(nuGetProject);
             var project = solutionManager.GetVsProjectAdapter(safeName);
 
-            return VsProjectAdapterInfoUtility.GetDisplayName(project);
+            return GetDisplayName(project);
+        }
+
+        private static string GetDisplayName(IVsProjectAdapter project)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            var name = project.CustomUniqueName;
+            if (IsWebSite(project))
+            {
+                name = PathHelper.SmartTruncate(name, 40);
+            }
+            return name;
+        }
+
+        private static bool IsWebSite(IVsProjectAdapter project)
+        {
+            return project.ProjectTypeGuids.Contains(VsProjectTypes.WebSiteProjectTypeGuid);
         }
 
         #region ITabExpansion
