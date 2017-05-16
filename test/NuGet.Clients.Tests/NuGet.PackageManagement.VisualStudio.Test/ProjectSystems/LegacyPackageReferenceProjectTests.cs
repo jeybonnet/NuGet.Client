@@ -508,9 +508,9 @@ namespace NuGet.PackageManagement.VisualStudio.Test
                 return JoinableTaskFactory.Run(asyncAction);
             }
 
-            public void VerifyOnUIThread()
+            public void VerifyOnUIThread(string callerMemberName)
             {
-                ThreadHelper.ThrowIfNotOnUIThread();
+                ThreadHelper.ThrowIfNotOnUIThread(callerMemberName);
             }
         }
 

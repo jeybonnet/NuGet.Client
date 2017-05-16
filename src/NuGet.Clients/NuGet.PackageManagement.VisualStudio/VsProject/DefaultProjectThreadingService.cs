@@ -26,9 +26,9 @@ namespace NuGet.PackageManagement.VisualStudio
             return NuGetUIThreadHelper.JoinableTaskFactory.Run(asyncMethod);
         }
 
-        public void VerifyOnUIThread()
+        public void VerifyOnUIThread(string callerMemberName)
         {
-            ThreadHelper.ThrowIfNotOnUIThread();
+            ThreadHelper.ThrowIfNotOnUIThread(callerMemberName);
         }
     }
 }

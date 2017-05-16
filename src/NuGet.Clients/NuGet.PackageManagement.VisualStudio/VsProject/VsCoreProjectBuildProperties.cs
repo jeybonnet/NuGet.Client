@@ -21,7 +21,7 @@ namespace NuGet.PackageManagement.VisualStudio
             EnvDTE.Project project,
             IVsProjectThreadingService threadingService)
         {
-            Assumes.Present(_project);
+            Assumes.Present(project);
 
             _project = project;
             _threadingService = threadingService;
