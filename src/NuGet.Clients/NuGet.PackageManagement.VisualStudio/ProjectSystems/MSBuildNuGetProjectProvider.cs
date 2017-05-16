@@ -93,7 +93,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
             projectServices.ProjectAdapter = vsProjectAdapter;
             projectServices.Capabilities = projectSystem;
-            projectServices.ItemsReader = projectSystem;
+            projectServices.ReferencesReader = projectSystem;
             projectServices.ProjectSystem = projectSystem;
             projectServices.References = projectSystem;
 
@@ -121,7 +121,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public IProjectSystemCapabilities Capabilities { get; set; }
 
-        public IProjectSystemReferencesReader ItemsReader { get; set; }
+        public IProjectSystemReferencesReader ReferencesReader { get; set; }
 
         public IProjectSystemService ProjectSystem { get; set; }
 

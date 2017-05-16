@@ -155,7 +155,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
             vsProjectServices.ProjectAdapter = vsProjectAdapter;
             vsProjectServices.Capabilities = vsLangProjectSystemService;
-            vsProjectServices.ItemsReader = vsLangProjectSystemService;
+            vsProjectServices.ReferencesReader = vsLangProjectSystemService;
             vsProjectServices.References = vsLangProjectSystemService;
 
             return vsProjectServices;

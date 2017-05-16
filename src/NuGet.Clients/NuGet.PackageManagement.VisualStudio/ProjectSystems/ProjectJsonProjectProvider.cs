@@ -125,7 +125,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
             vsProjectServices.ProjectAdapter = vsProjectAdapter;
             vsProjectServices.Capabilities = vsCoreProjectSystemService;
-            vsProjectServices.ItemsReader = vsCoreProjectSystemService;
+            vsProjectServices.ReferencesReader = vsCoreProjectSystemService;
 
             return vsProjectServices;
         }

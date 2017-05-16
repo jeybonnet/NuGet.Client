@@ -62,7 +62,7 @@ namespace NuGet.PackageManagement.VisualStudio
             }
         }
 
-        public IProjectSystemReferencesReader ItemsReader
+        public IProjectSystemReferencesReader ReferencesReader
         {
             get
             {
@@ -71,7 +71,7 @@ namespace NuGet.PackageManagement.VisualStudio
                     return _deferredProjectServices;
                 }
 
-                return _fallbackProjectServices.Value.ItemsReader;
+                return _fallbackProjectServices.Value.ReferencesReader;
             }
         }
 

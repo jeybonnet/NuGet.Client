@@ -76,6 +76,9 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             get
             {
+#if VS14
+                return false;
+#else
                 _threadingService.VerifyOnUIThread();
 
                 object isDeferred;
@@ -88,7 +91,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 }
 
                 return object.Equals(true, isDeferred);
-
+#endif
             }
         }
 
@@ -195,9 +198,9 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public IVsHierarchy VsHierarchy => _vsHierarchyItem.VsHierarchy;
 
-        #endregion Properties
+#endregion Properties
 
-        #region Constructors
+#region Constructors
 
         public VsProjectAdapter(
             VsHierarchyItem vsHierarchyItem,
@@ -220,9 +223,9 @@ namespace NuGet.PackageManagement.VisualStudio
             BuildProperties = buildProperties;
         }
 
-        #endregion Constructors
+#endregion Constructors
 
-        #region Getters
+#region Getters
 
         public async Task<bool> EntityExists(string filePath)
         {

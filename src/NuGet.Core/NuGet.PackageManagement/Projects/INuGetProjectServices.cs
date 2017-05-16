@@ -99,9 +99,9 @@ namespace NuGet.ProjectManagement
     {
         IProjectBuildProperties BuildProperties { get; }
         IProjectSystemCapabilities Capabilities { get; }
-        IProjectSystemReferencesReader ItemsReader { get; }
-        IProjectSystemService ProjectSystem { get; }
+        IProjectSystemReferencesReader ReferencesReader { get; }
         IProjectSystemReferencesService References { get; }
+        IProjectSystemService ProjectSystem { get; }
 
         // generic catalog of services
         T GetService<T>() where T : class;
@@ -110,15 +110,16 @@ namespace NuGet.ProjectManagement
     internal sealed class DefaultProjectServices
         : INuGetProjectServices
         , IProjectBuildProperties
-        , IProjectSystemReferencesService
         , IProjectSystemCapabilities
+        , IProjectSystemReferencesReader
+        , IProjectSystemReferencesService
         , IProjectSystemService
     {
         public static INuGetProjectServices Instance { get; } = new DefaultProjectServices();
 
         public IProjectBuildProperties BuildProperties => this;
         public IProjectSystemCapabilities Capabilities => this;
-        public IProjectSystemReferencesReader ItemsReader => throw new NotImplementedException();
+        public IProjectSystemReferencesReader ReferencesReader => this;
         public IProjectSystemService ProjectSystem => this;
         public IProjectSystemReferencesService References => this;
 

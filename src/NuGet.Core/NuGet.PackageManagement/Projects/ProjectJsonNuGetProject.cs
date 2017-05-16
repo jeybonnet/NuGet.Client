@@ -190,7 +190,7 @@ namespace NuGet.ProjectManagement.Projects
                 metadata.ProjectUniqueName = MSBuildProjectPath;
 
                 var references = (await ProjectServices
-                    .ItemsReader
+                    .ReferencesReader
                     .GetProjectReferencesAsync(context.Logger))
                     .ToList();
                 if (references != null && references.Count > 0)

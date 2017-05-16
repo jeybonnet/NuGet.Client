@@ -232,11 +232,11 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             await _threadingService.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            var projectReferences = await ProjectServices.ItemsReader.GetProjectReferencesAsync(Common.NullLogger.Instance);
+            var projectReferences = await ProjectServices.ReferencesReader.GetProjectReferencesAsync(Common.NullLogger.Instance);
 
             var targetFramework = await _vsProjectAdapter.GetTargetFrameworkAsync();
 
-            var packageReferences = (await ProjectServices.ItemsReader.GetPackageReferencesAsync(targetFramework))
+            var packageReferences = (await ProjectServices.ReferencesReader.GetPackageReferencesAsync(targetFramework))
                 .ToList();
 
             var packageTargetFallback = _vsProjectAdapter.PackageTargetFallback?.Split(new[] { ';' })

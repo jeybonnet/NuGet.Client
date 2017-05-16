@@ -647,7 +647,7 @@ namespace NuGet.ProjectManagement
                 metadata.ProjectUniqueName = ProjectSystem.ProjectFileFullPath;
 
                 var references = (await ProjectServices
-                    .ItemsReader
+                    .ReferencesReader
                     .GetProjectReferencesAsync(context.Logger))
                     .ToList();
                 if (references != null && references.Count > 0)

@@ -278,7 +278,7 @@ namespace NuGet.PackageManagement.VisualStudio.Test
                 Assert.Equal(VersionRange.Parse("1.*"), actualDependency.LibraryRange.VersionRange);
 
                 // Verify
-                Mock.Get(projectServices.ItemsReader)
+                Mock.Get(projectServices.ReferencesReader)
                     .Verify(x => x.GetPackageReferencesAsync(framework), Times.AtLeastOnce);
             }
         }
@@ -325,7 +325,7 @@ namespace NuGet.PackageManagement.VisualStudio.Test
                 Assert.Equal("TestProjectA", actualDependency.ProjectUniqueName);
 
                 // Verify
-                Mock.Get(projectServices.ItemsReader)
+                Mock.Get(projectServices.ReferencesReader)
                     .Verify(
                         x => x.GetProjectReferencesAsync(It.IsAny<Common.ILogger>()),
                         Times.AtLeastOnce);
@@ -370,7 +370,7 @@ namespace NuGet.PackageManagement.VisualStudio.Test
                     packageReference.PackageIdentity.ToString());
 
                 // Verify
-                Mock.Get(projectServices.ItemsReader)
+                Mock.Get(projectServices.ReferencesReader)
                     .Verify(x => x.GetPackageReferencesAsync(framework), Times.AtLeastOnce);
             }
         }
@@ -518,11 +518,11 @@ namespace NuGet.PackageManagement.VisualStudio.Test
         {
             public TestProjectSystemServices()
             {
-                Mock.Get(ItemsReader)
+                Mock.Get(ReferencesReader)
                     .Setup(x => x.GetProjectReferencesAsync(It.IsAny<Common.ILogger>()))
                     .ReturnsAsync(() => new ProjectRestoreReference[] { });
 
-                Mock.Get(ItemsReader)
+                Mock.Get(ReferencesReader)
                     .Setup(x => x.GetPackageReferencesAsync(It.IsAny<NuGetFramework>()))
                     .ReturnsAsync(() => new LibraryDependency[] { });
             }
@@ -531,7 +531,7 @@ namespace NuGet.PackageManagement.VisualStudio.Test
 
             public IProjectSystemCapabilities Capabilities { get; } = Mock.Of<IProjectSystemCapabilities>();
 
-            public IProjectSystemReferencesReader ItemsReader { get; } = Mock.Of<IProjectSystemReferencesReader>();
+            public IProjectSystemReferencesReader ReferencesReader { get; } = Mock.Of<IProjectSystemReferencesReader>();
 
             public IProjectSystemService ProjectSystem { get; } = Mock.Of<IProjectSystemService>();
 
@@ -544,14 +544,14 @@ namespace NuGet.PackageManagement.VisualStudio.Test
 
             public void SetupInstalledPackages(NuGetFramework targetFramework, params LibraryDependency[] dependencies)
             {
-                Mock.Get(ItemsReader)
+                Mock.Get(ReferencesReader)
                     .Setup(x => x.GetPackageReferencesAsync(targetFramework))
                     .ReturnsAsync(dependencies.ToList());
             }
 
             public void SetupProjectDependencies(params ProjectRestoreReference[] dependencies)
             {
-                Mock.Get(ItemsReader)
+                Mock.Get(ReferencesReader)
                     .Setup(x => x.GetProjectReferencesAsync(It.IsAny<Common.ILogger>()))
                     .ReturnsAsync(dependencies.ToList());
             }
