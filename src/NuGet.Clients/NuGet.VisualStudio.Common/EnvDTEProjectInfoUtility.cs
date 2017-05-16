@@ -15,17 +15,20 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using NuGet.Commands;
 using NuGet.Frameworks;
+using NuGet.ProjectManagement;
 
 namespace NuGet.VisualStudio
 {
     public static class EnvDTEProjectInfoUtility
     {
-        #region Constants and Statics
+        #region Constants
 
         public const string WebConfig = "web.config";
         public const string AppConfig = "app.config";
+        public const string FullPath = "FullPath";
+        public const string ProjectDirectory = "ProjectDirectory";
 
-        #endregion // Constants and Statics
+        #endregion // Constants
 
         #region Get Project Information
 
@@ -46,7 +49,7 @@ namespace NuGet.VisualStudio
             }
 
             // FullPath
-            var fullPath = GetPotentialFullPathOrNull(GetPropertyValue<string>(envDTEProject, "FullPath"));
+            var fullPath = GetPotentialFullPathOrNull(GetPropertyValue<string>(envDTEProject, FullPath));
 
             if (fullPath != null)
             {
@@ -89,7 +92,7 @@ namespace NuGet.VisualStudio
             // until we can find one containing the full path.
 
             // FullPath
-            string fullPath = GetPropertyValue<string>(envDTEProject, "FullPath");
+            string fullPath = GetPropertyValue<string>(envDTEProject, FullPath);
 
             if (!String.IsNullOrEmpty(fullPath))
             {
@@ -104,7 +107,7 @@ namespace NuGet.VisualStudio
             }
 
             // C++ projects do not have FullPath property, but do have ProjectDirectory one.
-            string projectDirectory = GetPropertyValue<string>(envDTEProject, "ProjectDirectory");
+            string projectDirectory = GetPropertyValue<string>(envDTEProject, ProjectDirectory);
 
             if (!String.IsNullOrEmpty(projectDirectory))
             {
@@ -338,10 +341,10 @@ namespace NuGet.VisualStudio
             }
 
             var projectPath = GetFullProjectPath(envDTEProject);
-            var platformIdentifier = GetPropertyValue<string>(envDTEProject, "TargetPlatformIdentifier");
-            var platformVersion = GetPropertyValue<string>(envDTEProject, "TargetPlatformVersion");
-            var platformMinVersion = GetPropertyValue<string>(envDTEProject, "TargetPlatformMinVersion");
-            var targetFrameworkMoniker = GetPropertyValue<string>(envDTEProject, "TargetFrameworkMoniker");
+            var platformIdentifier = GetPropertyValue<string>(envDTEProject, ProjectBuildProperties.TargetPlatformIdentifier);
+            var platformVersion = GetPropertyValue<string>(envDTEProject, ProjectBuildProperties.TargetPlatformVersion);
+            var platformMinVersion = GetPropertyValue<string>(envDTEProject, ProjectBuildProperties.TargetPlatformMinVersion);
+            var targetFrameworkMoniker = GetPropertyValue<string>(envDTEProject, ProjectBuildProperties.TargetFrameworkMoniker);
             var isManagementPackProject = IsManagementPackProject(envDTEProject);
             var isXnaWindowsPhoneProject = IsXnaWindowsPhoneProject(envDTEProject);
 

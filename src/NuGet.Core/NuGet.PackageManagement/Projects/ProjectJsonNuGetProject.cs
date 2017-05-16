@@ -233,6 +233,8 @@ namespace NuGet.ProjectManagement.Projects
 
             JsonConfigUtility.AddDependency(json, dependency);
 
+            UpdateFramework(json);
+
             await SaveJsonAsync(json);
 
             return true;
@@ -249,6 +251,8 @@ namespace NuGet.ProjectManagement.Projects
 
             JsonConfigUtility.RemoveDependency(json, packageId);
 
+            UpdateFramework(json);
+
             await SaveJsonAsync(json);
 
             return true;
@@ -257,6 +261,11 @@ namespace NuGet.ProjectManagement.Projects
         public override async Task<bool> UninstallPackageAsync(PackageIdentity packageIdentity, INuGetProjectContext nuGetProjectContext, CancellationToken token)
         {
             return await RemoveDependencyAsync(packageIdentity.Id, nuGetProjectContext, token);
+        }
+
+        protected bool IsUAPFramework(NuGetFramework framework)
+        {
+            return string.Equals("uap", framework.Framework, StringComparison.OrdinalIgnoreCase);
         }
 
         private JObject GetJson()
@@ -296,6 +305,20 @@ namespace NuGet.ProjectManagement.Projects
             using (var writer = new StreamWriter(_jsonConfig.FullName, false, Encoding.UTF8))
             {
                 await writer.WriteAsync(json.ToString());
+            }
+        }
+
+        private void UpdateFramework(JObject json)
+        {
+            var frameworks = JsonConfigUtility.GetFrameworks(json);
+            if (InternalMetadata.TryGetValue(NuGetProjectMetadataKeys.TargetFramework, out object newTargetFramework))
+            {
+                if (IsUAPFramework(newTargetFramework as NuGetFramework) && frameworks.Count() == 1)
+                {
+                    // project.json can have only one target framework
+                    JsonConfigUtility.ClearFrameworks(json);
+                    JsonConfigUtility.AddFramework(json, newTargetFramework as NuGetFramework);
+                }
             }
         }
     }
