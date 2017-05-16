@@ -1004,7 +1004,7 @@ namespace NuGet.PackageManagement.VisualStudio
                     var result = _projectSystemCache.TryGetVsProjectAdapter(projectProjectPath, out IVsProjectAdapter vsReferencedProject);
                     if (result)
                     {
-                        AddDependentProject(dependentProjectsDictionary, vsProjectAdapter, vsReferencedProject);
+                        AddDependentProject(dependentProjectsDictionary, vsReferencedProject, vsProjectAdapter);
                     }
                 }
             }
